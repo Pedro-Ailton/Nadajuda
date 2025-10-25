@@ -25,13 +25,13 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ProvaSelect } from './prova-select';
+import { ProvaAutocomplete } from './prova-select';
 import type { Event as ProvaType } from '@/lib/types';
 
 
 const competitionSchema = z.object({
   eventId: z.string({ required_error: 'Selecione uma prova.' }),
-  eventName: z.string(), // Added to schema to hold the name
+  eventName: z.string({ required_error: 'O nome da prova é obrigatório.' }),
   time: z.coerce.number().positive('O tempo deve ser um número positivo.'),
   date: z.date({ required_error: 'A data da competição é obrigatória.' }),
 });
@@ -56,6 +56,8 @@ export function AddCompetitionForm() {
     defaultValues: {
       time: undefined,
       date: undefined,
+      eventId: '',
+      eventName: ''
     }
   });
 
@@ -91,7 +93,7 @@ export function AddCompetitionForm() {
       description: 'Sua competição foi registrada.',
     });
 
-    reset({ eventId: undefined, eventName: undefined, time: undefined, date: undefined });
+    reset({ eventId: '', eventName: '', time: undefined, date: undefined });
     setOpen(false);
   };
 
@@ -111,13 +113,12 @@ export function AddCompetitionForm() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Prova</Label>
-              <ProvaSelect 
-                control={control} 
+              <ProvaAutocomplete 
                 provas={provas || []}
                 isLoading={isLoadingProvas}
               />
-              {errors.eventId && (
-                <p className="text-sm text-destructive">{errors.eventId.message}</p>
+              {errors.eventName && (
+                <p className="text-sm text-destructive">{errors.eventName.message}</p>
               )}
             </div>
             <div className="space-y-2">

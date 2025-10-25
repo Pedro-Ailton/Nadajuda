@@ -1,51 +1,91 @@
 'use client';
 
-import type { Event as ProvaType } from '@/lib/types';
+import * as React from 'react';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Controller, useFormContext } from 'react-hook-form';
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { useFormContext, Controller } from 'react-hook-form';
+import type { Event as ProvaType } from '@/lib/types';
 
-type ProvaSelectProps = {
-  control: any;
+type ProvaAutocompleteProps = {
   provas: ProvaType[];
   isLoading: boolean;
 };
 
-export function ProvaSelect({ control, provas, isLoading }: ProvaSelectProps) {
-  const { setValue } = useFormContext();
+export function ProvaAutocomplete({ provas, isLoading }: ProvaAutocompleteProps) {
+  const [open, setOpen] = React.useState(false);
+  const { control, setValue, watch } = useFormContext();
+
+  const eventName = watch('eventName');
 
   return (
     <Controller
-      name="eventId"
+      name="eventName"
       control={control}
       render={({ field }) => (
-        <Select
-          onValueChange={(value) => {
-            field.onChange(value);
-            const selectedProva = provas?.find(p => p.id === value);
-            if (selectedProva) {
-              setValue('eventName', selectedProva.name);
-            }
-          }}
-          defaultValue={field.value}
-          disabled={isLoading}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder={isLoading ? "Carregando provas..." : "Selecione uma prova..."} />
-          </SelectTrigger>
-          <SelectContent>
-            {provas.map((prova) => (
-              <SelectItem key={prova.id} value={prova.id}>
-                {prova.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-full justify-between"
+              disabled={isLoading}
+            >
+              {isLoading
+                ? 'Carregando provas...'
+                : field.value
+                ? provas.find((prova) => prova.name === field.value)?.name
+                : 'Selecione uma prova...'}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+            <Command>
+              <CommandInput placeholder="Pesquisar prova..." />
+              <CommandList>
+                <CommandEmpty>Nenhuma prova encontrada.</CommandEmpty>
+                <CommandGroup>
+                  {provas.map((prova) => (
+                    <CommandItem
+                      key={prova.id}
+                      value={prova.name}
+                      onSelect={(currentValue) => {
+                        const selectedProva = provas.find(p => p.name.toLowerCase() === currentValue.toLowerCase());
+                        if (selectedProva) {
+                            setValue('eventName', selectedProva.name);
+                            setValue('eventId', selectedProva.id);
+                        }
+                        setOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          'mr-2 h-4 w-4',
+                          eventName === prova.name ? 'opacity-100' : 'opacity-0'
+                        )}
+                      />
+                      {prova.name}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       )}
     />
   );
