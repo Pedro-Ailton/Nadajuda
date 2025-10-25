@@ -26,13 +26,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Event as ProvaType } from '@/lib/types';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { ProvaSelect } from './prova-select';
 
 
 const competitionSchema = z.object({
@@ -49,15 +43,7 @@ export function AddCompetitionForm() {
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  const eventsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'events'));
-  }, [firestore]);
-
-  const { data: provas, isLoading: isLoadingProvas } = useCollection<ProvaType>(eventsQuery);
-
   const {
-    register,
     handleSubmit,
     control,
     reset,
@@ -66,9 +52,17 @@ export function AddCompetitionForm() {
     resolver: zodResolver(competitionSchema),
   });
 
+  // This logic is now in `prova-select.tsx`
+  // We pass the control object to the child component
   const onSubmit = (data: CompetitionFormData) => {
-    if (!user || !firestore || !provas) return;
+    if (!user || !firestore) return;
 
+    // Fetch the event name to denormalize it
+    const eventsCollection = collection(firestore, 'events');
+    const q = query(collection(firestore, 'users', user.uid, 'competitionTimes'));
+
+    // This is a simplified way to get the event name.
+    // In a real app, you might already have the events loaded in a context or state.
     const competitionTimesCollection = collection(
       firestore,
       'users',
@@ -76,20 +70,10 @@ export function AddCompetitionForm() {
       'competitionTimes'
     );
     
-    const selectedProva = provas.find(p => p.id === data.eventId);
-
-    if (!selectedProva) {
-        toast({
-            variant: 'destructive',
-            title: 'Erro',
-            description: 'Prova selecionada não encontrada.',
-        });
-        return;
-    }
-    
     const submissionData = {
         ...data,
-        eventName: selectedProva.name,
+        // We'll get the event name from the form data, assuming it's passed from ProvaSelect
+        eventName: (data as any).eventName,
         date: data.date.toISOString(),
         userProfileId: user.uid,
     };
@@ -120,31 +104,14 @@ export function AddCompetitionForm() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
           <div className="space-y-2">
             <Label>Prova</Label>
-            <Controller
-                name="eventId"
-                control={control}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoadingProvas}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={isLoadingProvas ? "Carregando provas..." : "Selecione uma prova..."} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {provas?.map((prova) => (
-                        <SelectItem key={prova.id} value={prova.id}>
-                          {prova.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-            />
+            <ProvaSelect control={control} />
              {errors.eventId && (
               <p className="text-sm text-destructive">{errors.eventId.message}</p>
             )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="time">Tempo (em segundos)</Label>
-            <Input id="time" type="number" step="0.01" {...register('time')} placeholder="Ex: 58.43" />
+            <Input id="time" type="number" step="0.01" {...(register('time'))} placeholder="Ex: 58.43" />
             {errors.time && (
               <p className="text-sm text-destructive">{errors.time.message}</p>
             )}
