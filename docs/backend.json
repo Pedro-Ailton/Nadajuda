@@ -1,0 +1,288 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user's profile in the SwimWise application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "User's full name."
+        },
+        "dateOfBirth": {
+          "type": "string",
+          "description": "User's date of birth.",
+          "format": "date-time"
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "personalNotes": {
+          "type": "string",
+          "description": "Personal notes or information provided by the user."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "dateOfBirth",
+        "email"
+      ]
+    },
+    "CompetitionTime": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CompetitionTime",
+      "type": "object",
+      "description": "Represents the time recorded for a specific athlete in a competition.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the CompetitionTime entity."
+        },
+        "userProfileId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N CompetitionTime)"
+        },
+        "eventId": {
+          "type": "string",
+          "description": "Reference to Event. (Relationship: Event 1:N CompetitionTime)"
+        },
+        "time": {
+          "type": "number",
+          "description": "The recorded time for the competition event (in seconds)."
+        },
+        "date": {
+          "type": "string",
+          "description": "Date of the competition.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userProfileId",
+        "eventId",
+        "time",
+        "date"
+      ]
+    },
+    "Workout": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Workout",
+      "type": "object",
+      "description": "Represents a workout created by the user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Workout entity."
+        },
+        "userProfileId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Workout)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the workout."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the workout."
+        },
+        "date": {
+          "type": "string",
+          "description": "Date the workout was performed or is scheduled for.",
+          "format": "date-time"
+        },
+        "workoutItems": {
+          "type": "array",
+          "description": "References to WorkoutItems. (Relationship: Workout 1:N WorkoutItem)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "userProfileId",
+        "name",
+        "date"
+      ]
+    },
+    "WorkoutItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "WorkoutItem",
+      "type": "object",
+      "description": "Represents an item in a Workout.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the WorkoutItem entity."
+        },
+        "workoutId": {
+          "type": "string",
+          "description": "Reference to Workout. (Relationship: Workout 1:N WorkoutItem)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the workout item."
+        },
+        "estimatedTime": {
+          "type": "number",
+          "description": "Estimated time for the workout item (in seconds)."
+        },
+        "actualTime": {
+          "type": "number",
+          "description": "Actual time taken for the workout item (in seconds)."
+        }
+      },
+      "required": [
+        "id",
+        "workoutId",
+        "description"
+      ]
+    },
+    "Event": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Event",
+      "type": "object",
+      "description": "Represents a specific swimming event or competition.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Event entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the event (e.g., 100m Freestyle)."
+        },
+        "distance": {
+          "type": "number",
+          "description": "Distance of the event (e.g., 100 for 100m)."
+        },
+        "stroke": {
+          "type": "string",
+          "description": "Swimming stroke used in the event (e.g., Freestyle, Backstroke)."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "distance",
+        "stroke"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profiles. Uses path-based ownership for security. The `userId` parameter matches the Firebase Auth UID.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth UID of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userProfileId}/competitionTimes/{competitionTimeId}",
+        "definition": {
+          "entityName": "CompetitionTime",
+          "schema": {
+            "$ref": "#/backend/entities/CompetitionTime"
+          },
+          "description": "Stores competition times for each user. Includes denormalized 'userProfileId' for authorization independence.",
+          "params": [
+            {
+              "name": "userProfileId",
+              "description": "The Firebase Auth UID of the user."
+            },
+            {
+              "name": "competitionTimeId",
+              "description": "Unique identifier for the CompetitionTime entity."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userProfileId}/workouts/{workoutId}",
+        "definition": {
+          "entityName": "Workout",
+          "schema": {
+            "$ref": "#/backend/entities/Workout"
+          },
+          "description": "Stores workouts created by each user. Includes denormalized 'userProfileId' for authorization independence.",
+          "params": [
+            {
+              "name": "userProfileId",
+              "description": "The Firebase Auth UID of the user."
+            },
+            {
+              "name": "workoutId",
+              "description": "Unique identifier for the Workout entity."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userProfileId}/workouts/{workoutId}/workoutItems/{workoutItemId}",
+        "definition": {
+          "entityName": "WorkoutItem",
+          "schema": {
+            "$ref": "#/backend/entities/WorkoutItem"
+          },
+          "description": "Stores workout items for each workout. Includes denormalized 'userProfileId' for authorization independence.",
+          "params": [
+            {
+              "name": "userProfileId",
+              "description": "The Firebase Auth UID of the user."
+            },
+            {
+              "name": "workoutId",
+              "description": "Unique identifier for the Workout entity."
+            },
+            {
+              "name": "workoutItemId",
+              "description": "Unique identifier for the WorkoutItem entity."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/events/{eventId}",
+        "definition": {
+          "entityName": "Event",
+          "schema": {
+            "$ref": "#/backend/entities/Event"
+          },
+          "description": "Stores events. Assumes events are global and accessible to all users.",
+          "params": [
+            {
+              "name": "eventId",
+              "description": "Unique identifier for the Event entity."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to manage user profiles, competition times, workouts, workout items, and events for the SwimWise application. It emphasizes authorization independence, clarity, and scalability, aligning with the core design principles. User profiles are stored under `/users/{userId}`, providing secure, path-based ownership. Competition times, workouts, and workout items are stored as subcollections under the user's profile, ensuring that only the user has access to their data. Events are stored in a top-level collection, `/events`, assuming they are global and accessible to all users. This design enforces consistent security rules based on ownership and avoids complex authorization logic. This structure facilitates simple, robust, and easily debuggable security rules, as access control is primarily based on user ID and path-based ownership. This eliminates the need for complex `get()` calls in security rules and enables atomic operations.\n\nTo achieve Authorization Independence, UserProfile ID is denormalized in all subcollections for simple and safe rules.\n\nQAPs are satisfied due to segregation of data. All `list` operations will be secure because only the authenticated user will be able to access resources under `/users/{userId}` path."
+  }
+}
