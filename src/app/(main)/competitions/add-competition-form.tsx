@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useForm, Controller, FormProvider } from 'react-hook-form';
+import { useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -10,66 +10,61 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useUser, useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
+import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Plus } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ProvaAutocomplete } from './prova-select';
 import type { Event as ProvaType } from '@/lib/types';
 
 
 const competitionSchema = z.object({
-  eventId: z.string({ required_error: 'Selecione uma prova.' }),
-  eventName: z.string({ required_error: 'O nome da prova é obrigatório.' }),
   time: z.coerce.number().positive('O tempo deve ser um número positivo.'),
   date: z.date({ required_error: 'A data da competição é obrigatória.' }),
 });
 
 type CompetitionFormData = z.infer<typeof competitionSchema>;
 
-export function AddCompetitionForm() {
-  const [open, setOpen] = useState(false);
+type AddCompetitionFormProps = {
+    prova: ProvaType | null;
+    onOpenChange: (isOpen: boolean) => void;
+}
+
+export function AddCompetitionForm({ prova, onOpenChange }: AddCompetitionFormProps) {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
-
-  const eventsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'events'));
-  }, [firestore]);
-
-  const { data: provas, isLoading: isLoadingProvas } = useCollection<ProvaType>(eventsQuery);
-
-  const formMethods = useForm<CompetitionFormData>({
-    resolver: zodResolver(competitionSchema),
-    defaultValues: {
-      time: undefined,
-      date: undefined,
-      eventId: '',
-      eventName: ''
-    }
-  });
 
   const {
     handleSubmit,
     control,
     reset,
     formState: { errors },
-  } = formMethods;
+  } = useForm<CompetitionFormData>({
+    resolver: zodResolver(competitionSchema),
+    defaultValues: {
+      time: undefined,
+      date: undefined,
+    }
+  });
+
+  useEffect(() => {
+    // Reset form when dialog closes or opens with a new prova
+    reset({ time: undefined, date: undefined });
+  }, [prova, reset]);
+
 
   const onSubmit = (data: CompetitionFormData) => {
-    if (!user || !firestore) return;
+    if (!user || !firestore || !prova) return;
 
     const competitionTimesCollection = collection(
       firestore,
@@ -79,8 +74,8 @@ export function AddCompetitionForm() {
     );
     
     const submissionData = {
-        eventId: data.eventId,
-        eventName: data.eventName,
+        eventId: prova.id,
+        eventName: prova.name,
         time: data.time,
         date: data.date.toISOString(),
         userProfileId: user.uid,
@@ -90,37 +85,19 @@ export function AddCompetitionForm() {
 
     toast({
       title: 'Sucesso!',
-      description: 'Sua competição foi registrada.',
+      description: `Tempo para ${prova.name} foi registrado.`,
     });
 
-    reset({ eventId: '', eventName: '', time: undefined, date: undefined });
-    setOpen(false);
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="-ml-1 mr-2 h-4 w-4" />
-          Registrar Competição
-        </Button>
-      </DialogTrigger>
+    <Dialog open={!!prova} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Registrar Nova Competição</DialogTitle>
+          <DialogTitle>Registrar Tempo para {prova?.name}</DialogTitle>
         </DialogHeader>
-        <FormProvider {...formMethods}>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Prova</Label>
-              <ProvaAutocomplete 
-                provas={provas || []}
-                isLoading={isLoadingProvas}
-              />
-              {errors.eventName && (
-                <p className="text-sm text-destructive">{errors.eventName.message}</p>
-              )}
-            </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="time">Tempo (em segundos)</Label>
               <Controller
@@ -182,8 +159,7 @@ export function AddCompetitionForm() {
               </DialogClose>
               <Button type="submit">Salvar</Button>
             </DialogFooter>
-          </form>
-        </FormProvider>
+        </form>
       </DialogContent>
     </Dialog>
   );
