@@ -5,12 +5,22 @@ export type Competition = {
   date: string;
 };
 
+export type WorkoutItem = {
+  id: string;
+  workoutId: string;
+  description: string;
+  estimatedTime?: number;
+  actualTime?: number;
+};
+
 export type Workout = {
   id: string;
-  description: string;
-  estimatedTime: string;
-  actualTime: string;
+  name: string;
+  date: string;
+  description?: string;
+  workoutItems?: WorkoutItem[];
 };
+
 
 export type UserProfile = {
   id: string;
@@ -19,4 +29,13 @@ export type UserProfile = {
   email: string;
   personalNotes?: string;
   avatarUrl?: string;
+};
+
+export type CompetitionTime = {
+    id: string;
+    userProfileId: string;
+    eventId: string;
+    eventName: string;
+    time: number; // in seconds
+    date: string; // ISO 8601
 };

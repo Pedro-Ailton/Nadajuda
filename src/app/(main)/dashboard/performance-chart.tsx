@@ -7,7 +7,7 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from '@/components/ui/chart';
-import type { Competition } from '@/lib/types';
+import type { CompetitionTime } from '@/lib/types';
 import { useMemo } from 'react';
 import {
   LineChart,
@@ -15,28 +15,19 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
-  Legend,
 } from 'recharts';
 import type { ChartConfig } from '@/components/ui/chart';
 
 type PerformanceChartProps = {
-  competitions: Competition[];
+  competitions: CompetitionTime[];
 };
-
-function parseTimeToSeconds(time: string): number {
-  const parts = time.replace('s', '').split(':');
-  let seconds = 0;
-  if (parts.length === 2) {
-    seconds = parseInt(parts[0], 10) * 60 + parseFloat(parts[1]);
-  } else {
-    seconds = parseFloat(parts[0]);
-  }
-  return seconds;
-}
 
 export function PerformanceChart({ competitions }: PerformanceChartProps) {
   const { chartData, events } = useMemo(() => {
+    if (!competitions || competitions.length === 0) {
+        return { chartData: [], events: [] };
+    }
+
     const dataByDate: Record<
       string,
       Record<string, number | string>
@@ -48,9 +39,8 @@ export function PerformanceChart({ competitions }: PerformanceChartProps) {
       if (!dataByDate[date]) {
         dataByDate[date] = { date };
       }
-      const timeInSeconds = parseTimeToSeconds(comp.time);
-      dataByDate[date][comp.event] = timeInSeconds;
-      eventSet.add(comp.event);
+      dataByDate[date][comp.eventName] = comp.time;
+      eventSet.add(comp.eventName);
     });
 
     const sortedData = Object.values(dataByDate).sort((a, b) => {

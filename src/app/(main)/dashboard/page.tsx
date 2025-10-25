@@ -1,13 +1,16 @@
 'use client';
-import { mockCompetitions } from '@/lib/mock-data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trophy, Zap, Clock } from 'lucide-react';
 import { PerformanceChart } from './performance-chart';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query } from 'firebase/firestore';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import type { CompetitionTime } from '@/lib/types';
 
-function getMostFrequentEvents(competitions: typeof mockCompetitions) {
+function getMostFrequentEvents(competitions: CompetitionTime[]) {
+  if (!competitions || competitions.length === 0) return [];
   const eventCounts = competitions.reduce((acc, comp) => {
-    acc[comp.event] = (acc[comp.event] || 0) + 1;
+    acc[comp.eventName] = (acc[comp.eventName] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
@@ -16,18 +19,32 @@ function getMostFrequentEvents(competitions: typeof mockCompetitions) {
     .slice(0, 3);
 }
 
-function getLatestBestTime(competitions: typeof mockCompetitions) {
-    if (competitions.length === 0) return { time: 'N/A', event: 'Sem dados' };
+function getLatestBestTime(competitions: CompetitionTime[]) {
+    if (!competitions || competitions.length === 0) return { time: 'N/A', eventName: 'Sem dados' };
     const latestCompetition = competitions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-    return { time: latestCompetition.time, event: latestCompetition.event };
+    
+    const minutes = Math.floor(latestCompetition.time / 60);
+    const seconds = (latestCompetition.time % 60).toFixed(2);
+    const formattedTime = minutes > 0 ? `${minutes}:${seconds.padStart(5, '0')}s` : `${seconds}s`;
+
+    return { time: formattedTime, eventName: latestCompetition.eventName };
 }
 
 
 export default function DashboardPage() {
   const { user } = useUser();
-  const mostFrequentEvents = getMostFrequentEvents(mockCompetitions);
-  const bestTime = getLatestBestTime(mockCompetitions);
-  const totalCompetitions = mockCompetitions.length;
+  const firestore = useFirestore();
+
+  const competitionTimesQuery = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return query(collection(firestore, 'users', user.uid, 'competitionTimes'));
+  }, [user, firestore]);
+
+  const { data: competitions, isLoading } = useCollection<CompetitionTime>(competitionTimesQuery);
+
+  const mostFrequentEvents = getMostFrequentEvents(competitions || []);
+  const bestTime = getLatestBestTime(competitions || []);
+  const totalCompetitions = competitions?.length || 0;
 
   const userName = user?.displayName?.split(' ')[0] || 'Nadador(a)';
 
@@ -49,7 +66,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{bestTime.time}</div>
-            <p className="text-xs text-muted-foreground">{bestTime.event}</p>
+            <p className="text-xs text-muted-foreground">{bestTime.eventName}</p>
           </CardContent>
         </Card>
         <Card className="shadow-md">
@@ -73,12 +90,14 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
              <div className="space-y-1">
-              {mostFrequentEvents.map(([event, count]) => (
+              {mostFrequentEvents.length > 0 ? mostFrequentEvents.map(([event, count]) => (
                 <div key={event} className="flex justify-between text-sm">
                   <span className="font-medium">{event}</span>
                   <span className="text-muted-foreground">{count} vezes</span>
                 </div>
-              ))}
+              )) : (
+                <p className="text-sm text-muted-foreground">Nenhum evento registrado.</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -90,7 +109,7 @@ export default function DashboardPage() {
             <CardTitle>Análise de Performance</CardTitle>
           </CardHeader>
           <CardContent>
-            <PerformanceChart competitions={mockCompetitions} />
+            <PerformanceChart competitions={competitions || []} />
           </CardContent>
         </Card>
       </div>

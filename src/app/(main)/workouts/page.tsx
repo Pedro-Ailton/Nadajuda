@@ -1,4 +1,5 @@
-import { mockWorkouts } from '@/lib/mock-data';
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -10,8 +11,22 @@ import {
 } from '@/components/ui/table';
 import { Flame } from 'lucide-react';
 import { WorkoutSuggestions } from './workout-suggestions';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy } from 'firebase/firestore';
+import type { Workout } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function WorkoutsPage() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const workoutsQuery = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return query(collection(firestore, 'users', user.uid, 'workouts'), orderBy('date', 'desc'));
+  }, [user, firestore]);
+
+  const { data: workouts, isLoading } = useCollection<Workout>(workoutsQuery);
+
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
       <div className="flex items-center">
@@ -31,21 +46,36 @@ export default function WorkoutsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Treino</TableHead>
-                    <TableHead>Tempo Estimado</TableHead>
-                    <TableHead>Tempo Real</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Nome</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockWorkouts.map((workout) => (
-                    <TableRow key={workout.id}>
-                      <TableCell className="font-medium">
-                        {workout.description}
+                  {isLoading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-full" /></TableCell>
+                      </TableRow>
+                    ))
+                  ) : workouts && workouts.length > 0 ? (
+                    workouts.map((workout) => (
+                      <TableRow key={workout.id}>
+                         <TableCell>
+                          {new Date(workout.date).toLocaleDateString('pt-BR')}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {workout.name}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={2} className="text-center h-24">
+                        Nenhum treino registrado.
                       </TableCell>
-                      <TableCell>{workout.estimatedTime}</TableCell>
-                      <TableCell>{workout.actualTime}</TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
