@@ -1,7 +1,5 @@
 'use client';
 
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
 import type { Event as ProvaType } from '@/lib/types';
 import {
   Select,
@@ -14,18 +12,12 @@ import { Controller, useFormContext } from 'react-hook-form';
 
 type ProvaSelectProps = {
   control: any;
+  provas: ProvaType[];
+  isLoading: boolean;
 };
 
-export function ProvaSelect({ control }: ProvaSelectProps) {
-  const firestore = useFirestore();
-  const { setValue } = useFormContext(); // Use useFormContext to set eventName
-
-  const eventsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'events'));
-  }, [firestore]);
-
-  const { data: provas, isLoading: isLoadingProvas } = useCollection<ProvaType>(eventsQuery);
+export function ProvaSelect({ control, provas, isLoading }: ProvaSelectProps) {
+  const { setValue } = useFormContext();
 
   return (
     <Controller
@@ -37,17 +29,17 @@ export function ProvaSelect({ control }: ProvaSelectProps) {
             field.onChange(value);
             const selectedProva = provas?.find(p => p.id === value);
             if (selectedProva) {
-              setValue('eventName', selectedProva.name); // Set the eventName field
+              setValue('eventName', selectedProva.name);
             }
           }}
           defaultValue={field.value}
-          disabled={isLoadingProvas}
+          disabled={isLoading}
         >
           <SelectTrigger>
-            <SelectValue placeholder={isLoadingProvas ? "Carregando provas..." : "Selecione uma prova..."} />
+            <SelectValue placeholder={isLoading ? "Carregando provas..." : "Selecione uma prova..."} />
           </SelectTrigger>
           <SelectContent>
-            {provas?.map((prova) => (
+            {provas.map((prova) => (
               <SelectItem key={prova.id} value={prova.id}>
                 {prova.name}
               </SelectItem>

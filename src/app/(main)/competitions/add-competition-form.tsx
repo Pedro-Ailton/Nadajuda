@@ -16,8 +16,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useUser, useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Plus } from 'lucide-react';
@@ -26,6 +26,8 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ProvaSelect } from './prova-select';
+import type { Event as ProvaType } from '@/lib/types';
+
 
 const competitionSchema = z.object({
   eventId: z.string({ required_error: 'Selecione uma prova.' }),
@@ -41,6 +43,13 @@ export function AddCompetitionForm() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+
+  const eventsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'events'));
+  }, [firestore]);
+
+  const { data: provas, isLoading: isLoadingProvas } = useCollection<ProvaType>(eventsQuery);
 
   const formMethods = useForm<CompetitionFormData>({
     resolver: zodResolver(competitionSchema),
@@ -102,7 +111,11 @@ export function AddCompetitionForm() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Prova</Label>
-              <ProvaSelect control={control} />
+              <ProvaSelect 
+                control={control} 
+                provas={provas || []}
+                isLoading={isLoadingProvas}
+              />
               {errors.eventId && (
                 <p className="text-sm text-destructive">{errors.eventId.message}</p>
               )}
