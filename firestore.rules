@@ -2,42 +2,42 @@
  * @fileoverview Firestore Security Rules for NadAjuda application.
  *
  * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for user-generated content
- * (CompetitionTimes, Workouts, WorkoutItems) and allows public read access to global data (Events).
+ * This ruleset enforces a strict user-ownership model for user profiles, competition times, workouts, and workout items.
+ * Events are considered public and accessible to all users.
  *
  * Data Structure:
- * - /users/{userId}: User profiles, accessible only to the owning user.
- * - /users/{userId}/competitionTimes/{competitionTimeId}: Competition times for a specific user.
- * - /users/{userId}/workouts/{workoutId}: Workouts created by a specific user.
- * - /users/{userId}/workouts/{workoutId}/workoutItems/{workoutItemId}: Workout items for a specific workout.
- * - /events/{eventId}: Events available to all users.
+ * - /users/{userId}: Stores user profiles. `userId` must match the Firebase Auth UID.
+ * - /users/{userProfileId}/competitionTimes/{competitionTimeId}: Stores competition times for a user. `userProfileId` must match the Firebase Auth UID.
+ * - /users/{userProfileId}/workouts/{workoutId}: Stores workouts created by a user. `userProfileId` must match the Firebase Auth UID.
+ * - /users/{userProfileId}/workouts/{workoutId}/workoutItems/{workoutItemId}: Stores workout items for a workout. `userProfileId` must match the Firebase Auth UID.
+ * - /events/{eventId}: Stores events, accessible to all users.
  *
  * Key Security Decisions:
- * - User listing is disallowed.
- * - All write operations on user-owned data require authentication and ownership validation.
- * - Events are publicly readable but writes are disallowed, reflecting their global, read-only nature.
+ * - User profiles and associated data (competition times, workouts, workout items) are strictly owned by the user.
+ * - Events are public and readable by all.
+ * - List operations on user-owned subcollections are allowed only for the owner.
  *
  * Denormalization for Authorization:
- * - The `userProfileId` field is denormalized into the CompetitionTime, Workout, and WorkoutItem documents to enable simpler ownership checks without needing to perform additional reads.
+ * - The `userProfileId` is denormalized in the `competitionTimes`, `workouts`, and `workoutItems` collections to allow for simple, path-based authorization rules.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Manages user profiles. Only the user can read and write their own profile.
+     * @description Secures the user profiles collection.
      * @path /users/{userId}
-     * @allow (create) User with UID 'user123' creates a profile with id: 'user123'.
-     * @allow (get) User with UID 'user123' reads their own profile at /users/user123.
-     * @allow (update) User with UID 'user123' updates their own profile at /users/user123.
-     * @allow (delete) User with UID 'user123' deletes their own profile at /users/user123.
-     * @deny (create) User with UID 'user456' attempts to create a profile with id: 'user123'.
-     * @deny (get) User with UID 'user456' attempts to read profile at /users/user123.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User with UID 'user123' creates a profile with ID 'user123'.
+     * @deny (create) User with UID 'user456' tries to create a profile with ID 'user123'.
+     * @allow (get) User with UID 'user123' reads their own profile.
+     * @deny (get) User with UID 'user456' tries to read profile 'user123'.
+     * @deny (update) User attempts to modify a profile they don't own.
+     * @deny (delete) User attempts to delete a profile they don't own.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId} {
       function isOwner(userId) {
-        return request.auth.uid == userId;
+        return request.auth != null && request.auth.uid == userId;
       }
 
       function isExistingOwner(userId) {
@@ -45,7 +45,6 @@ service cloud.firestore {
       }
 
       allow get: if isOwner(userId);
-      // User listing is not allowed
       allow list: if false;
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
@@ -53,20 +52,19 @@ service cloud.firestore {
     }
 
     /**
-     * @description Manages competition times for a user. Only the user can read and write their own competition times.
+     * @description Secures the competition times subcollection under a user's profile.
      * @path /users/{userProfileId}/competitionTimes/{competitionTimeId}
-     * @allow (create) User with UID 'user123' creates a competition time with userProfileId: 'user123'.
-     * @allow (get) User with UID 'user123' reads their own competition time at /users/user123/competitionTimes/comp1.
-     * @allow (update) User with UID 'user123' updates their own competition time at /users/user123/competitionTimes/comp1.
-     * @allow (delete) User with UID 'user123' deletes their own competition time at /users/user123/competitionTimes/comp1.
-     * @allow (list) User with UID 'user123' lists their own competition times at /users/user123/competitionTimes
-     * @deny (create) User with UID 'user456' attempts to create a competition time with userProfileId: 'user123'.
-     * @deny (get) User with UID 'user456' attempts to read competition time at /users/user123/competitionTimes/comp1.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User with UID 'user123' creates a competition time entry under their profile.
+     * @deny (create) User with UID 'user456' tries to create a competition time entry under profile 'user123'.
+     * @allow (get) User with UID 'user123' reads a competition time entry under their profile.
+     * @deny (get) User with UID 'user456' tries to read a competition time entry under profile 'user123'.
+     * @deny (update) User attempts to modify a competition time they don't own.
+     * @deny (delete) User attempts to delete a competition time they don't own.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userProfileId}/competitionTimes/{competitionTimeId} {
       function isOwner(userProfileId) {
-        return request.auth.uid == userProfileId;
+        return request.auth != null && request.auth.uid == userProfileId;
       }
 
       function isExistingOwner(userProfileId) {
@@ -81,20 +79,19 @@ service cloud.firestore {
     }
 
     /**
-     * @description Manages workouts for a user. Only the user can read and write their own workouts.
+     * @description Secures the workouts subcollection under a user's profile.
      * @path /users/{userProfileId}/workouts/{workoutId}
-     * @allow (create) User with UID 'user123' creates a workout with userProfileId: 'user123'.
-     * @allow (get) User with UID 'user123' reads their own workout at /users/user123/workouts/workout1.
-     * @allow (update) User with UID 'user123' updates their own workout at /users/user123/workouts/workout1.
-     * @allow (delete) User with UID 'user123' deletes their own workout at /users/user123/workouts/workout1.
-     * @allow (list) User with UID 'user123' lists their own workouts at /users/user123/workouts
-     * @deny (create) User with UID 'user456' attempts to create a workout with userProfileId: 'user123'.
-     * @deny (get) User with UID 'user456' attempts to read workout at /users/user123/workouts/workout1.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User with UID 'user123' creates a workout under their profile.
+     * @deny (create) User with UID 'user456' tries to create a workout under profile 'user123'.
+     * @allow (get) User with UID 'user123' reads a workout under their profile.
+     * @deny (get) User with UID 'user456' tries to read a workout under profile 'user123'.
+     * @deny (update) User attempts to modify a workout they don't own.
+     * @deny (delete) User attempts to delete a workout they don't own.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userProfileId}/workouts/{workoutId} {
       function isOwner(userProfileId) {
-        return request.auth.uid == userProfileId;
+        return request.auth != null && request.auth.uid == userProfileId;
       }
 
       function isExistingOwner(userProfileId) {
@@ -109,20 +106,19 @@ service cloud.firestore {
     }
 
     /**
-     * @description Manages workout items for a workout. Only the user can read and write their own workout items.
+     * @description Secures the workout items subcollection under a workout.
      * @path /users/{userProfileId}/workouts/{workoutId}/workoutItems/{workoutItemId}
-     * @allow (create) User with UID 'user123' creates a workout item with userProfileId: 'user123'.
-     * @allow (get) User with UID 'user123' reads their own workout item at /users/user123/workouts/workout1/workoutItems/item1.
-     * @allow (update) User with UID 'user123' updates their own workout item at /users/user123/workouts/workout1/workoutItems/item1.
-     * @allow (delete) User with UID 'user123' deletes their own workout item at /users/user123/workouts/workout1/workoutItems/item1.
-     * @allow (list) User with UID 'user123' lists their own workout items at /users/user123/workouts/workout1/workoutItems
-     * @deny (create) User with UID 'user456' attempts to create a workout item with userProfileId: 'user123'.
-     * @deny (get) User with UID 'user456' attempts to read workout item at /users/user123/workouts/workout1/workoutItems/item1.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User with UID 'user123' creates a workout item under their workout.
+     * @deny (create) User with UID 'user456' tries to create a workout item under profile 'user123'.
+     * @allow (get) User with UID 'user123' reads a workout item under their workout.
+     * @deny (get) User with UID 'user456' tries to read a workout item under profile 'user123'.
+     * @deny (update) User attempts to modify a workout item they don't own.
+     * @deny (delete) User attempts to delete a workout item they don't own.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userProfileId}/workouts/{workoutId}/workoutItems/{workoutItemId} {
       function isOwner(userProfileId) {
-        return request.auth.uid == userProfileId;
+        return request.auth != null && request.auth.uid == userProfileId;
       }
 
       function isExistingOwner(userProfileId) {
@@ -131,27 +127,25 @@ service cloud.firestore {
 
       allow get: if isOwner(userProfileId);
       allow list: if isOwner(userProfileId);
-      allow create: if isOwner(userProfileId); // No userProfileId validation on create
-      allow update: if isExistingOwner(userProfileId); // No userProfileId validation on update
+      allow create: if isOwner(userProfileId) && request.resource.data.workoutId == workoutId;
+      allow update: if isExistingOwner(userProfileId);
       allow delete: if isExistingOwner(userProfileId);
     }
 
     /**
-     * @description Manages events. Events are publicly readable, but not writable.
+     * @description Secures the events collection. Events are publicly readable.
      * @path /events/{eventId}
      * @allow (get) Any user can read any event.
      * @allow (list) Any user can list events.
-     * @deny (create) No one can create events.
-     * @deny (update) No one can update events.
-     * @deny (delete) No one can delete events.
-     * @principle Allows public read access but restricts writes.
+     * @deny (create) No one can create events. // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (update) No one can update events. // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (delete) No one can delete events. // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @principle Allows public read access.
      */
     match /events/{eventId} {
       allow get: if true;
       allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
   }
 }
