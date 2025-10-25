@@ -23,7 +23,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { generateWorkoutSuggestionsAction } from '@/lib/actions';
@@ -84,124 +83,128 @@ export function WorkoutSuggestions() {
   }
 
   return (
-    <Card className="shadow-md">
+    <>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BrainCircuit />
-              Sugestões de Treino com IA
-            </CardTitle>
-            <CardDescription>
-              Preencha seus dados para obter ideias de treino personalizadas do nosso treinador de IA.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="pastPerformance"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Resumo do Desempenho Anterior</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Ex: 'Meu tempo recente nos 50m livre é 25.5s. Tenho dificuldade na resistência do nado borboleta.'"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="goals"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Objetivos de Treinamento</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Ex: 'Baixar de 55s nos 100m borboleta. Melhorar as pernadas submersas.'"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="athleteType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Atleta</FormLabel>
-                   <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BrainCircuit />
+                Sugestões de Treino com IA
+              </CardTitle>
+              <CardDescription>
+                Preencha seus dados para obter ideias de treino personalizadas do nosso treinador de IA.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="pastPerformance"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Resumo do Desempenho Anterior</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione sua principal força" />
-                      </SelectTrigger>
+                      <Textarea
+                        placeholder="Ex: 'Meu tempo recente nos 50m livre é 25.5s. Tenho dificuldade na resistência do nado borboleta.'"
+                        {...field}
+                      />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="sprinter">Velocista (50m-100m)</SelectItem>
-                      <SelectItem value="mid-distance">Meio-Fundo (200m-400m)</SelectItem>
-                      <SelectItem value="distance">Fundo (800m+)</SelectItem>
-                      <SelectItem value="all-rounder">Completo (Medley)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="eventPreference"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Evento/Estilo Preferido</FormLabel>
-                   <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="goals"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Objetivos de Treinamento</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione seu evento favorito" />
-                      </Trigger>
+                      <Textarea
+                        placeholder="Ex: 'Baixar de 55s nos 100m borboleta. Melhorar as pernadas submersas.'"
+                        {...field}
+                      />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="freestyle">Livre</SelectItem>
-                      <SelectItem value="backstroke">Costas</SelectItem>
-                      <SelectItem value="breaststroke">Peito</SelectItem>
-                      <SelectItem value="butterfly">Borboleta</SelectItem>
-                       <SelectItem value="individual-medley">Medley Individual</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-          <CardFooter>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Gerando...' : 'Obter Sugestões'}
-            </Button>
-          </CardFooter>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="athleteType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Atleta</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione sua principal força" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="sprinter">Velocista (50m-100m)</SelectItem>
+                        <SelectItem value="mid-distance">Meio-Fundo (200m-400m)</SelectItem>
+                        <SelectItem value="distance">Fundo (800m+)</SelectItem>
+                        <SelectItem value="all-rounder">Completo (Medley)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="eventPreference"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Evento/Estilo Preferido</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione seu evento favorito" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="freestyle">Livre</SelectItem>
+                        <SelectItem value="backstroke">Costas</SelectItem>
+                        <SelectItem value="breaststroke">Peito</SelectItem>
+                        <SelectItem value="butterfly">Borboleta</SelectItem>
+                        <SelectItem value="individual-medley">Medley Individual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+            <CardFooter>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? 'Gerando...' : 'Obter Sugestões'}
+              </Button>
+            </CardFooter>
+          </Card>
         </form>
       </Form>
-
+      
       {(isLoading || suggestion) && (
-        <CardContent>
-          <CardTitle className="text-lg mb-4">Seu Treino Sugerido</CardTitle>
-            {isLoading && (
-                 <div className="space-y-2">
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-1/2" />
-                 </div>
-            )}
-            {suggestion && (
-                <div className="text-sm text-foreground whitespace-pre-wrap rounded-md bg-muted/50 p-4 border">
-                    {suggestion}
-                </div>
-            )}
-        </CardContent>
+        <Card className="shadow-md mt-4">
+            <CardContent className="pt-6">
+            <CardTitle className="text-lg mb-4">Seu Treino Sugerido</CardTitle>
+                {isLoading && (
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-1/2" />
+                    </div>
+                )}
+                {suggestion && (
+                    <div className="text-sm text-foreground whitespace-pre-wrap rounded-md bg-muted/50 p-4 border">
+                        {suggestion}
+                    </div>
+                )}
+            </CardContent>
+        </Card>
       )}
-    </Card>
+    </>
   );
 }
