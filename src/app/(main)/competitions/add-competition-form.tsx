@@ -105,7 +105,7 @@ export function AddCompetitionForm() {
           Registrar Competição
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Registrar Nova Competição</DialogTitle>
         </DialogHeader>

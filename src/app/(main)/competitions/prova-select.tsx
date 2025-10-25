@@ -66,8 +66,8 @@ export function ProvaAutocomplete({ provas, isLoading }: ProvaAutocompleteProps)
                       onSelect={(currentValue) => {
                         const selectedProva = provas.find(p => p.name.toLowerCase() === currentValue.toLowerCase());
                         if (selectedProva) {
-                            setValue('eventName', selectedProva.name);
-                            setValue('eventId', selectedProva.id);
+                            setValue('eventName', selectedProva.name, { shouldValidate: true });
+                            setValue('eventId', selectedProva.id, { shouldValidate: true });
                         }
                         setOpen(false);
                       }}
