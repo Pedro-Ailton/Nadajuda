@@ -29,6 +29,8 @@ const competitionSchema = z.object({
   eventName: z.string().min(1, 'O nome da prova é obrigatório.'),
   time: z.coerce.number().positive('O tempo deve ser um número positivo.'),
   date: z.date({ required_error: 'A data da competição é obrigatória.' }),
+  distance: z.coerce.number().positive('A distância deve ser um número positivo.'),
+  stroke: z.string().min(1, 'O estilo é obrigatório.'),
 });
 
 type CompetitionFormData = z.infer<typeof competitionSchema>;
@@ -55,6 +57,8 @@ export function AddCompetitionForm({ isOpen, onOpenChange }: AddCompetitionFormP
         eventName: '',
         time: undefined,
         date: undefined,
+        distance: undefined,
+        stroke: '',
     }
   });
 
@@ -75,13 +79,16 @@ export function AddCompetitionForm({ isOpen, onOpenChange }: AddCompetitionFormP
       'competitionTimes'
     );
     
-    const eventId = data.eventName.toLowerCase().replace(/ /g, '-');
+    // We can still create a unique eventId for potential grouping later
+    const eventId = `${data.stroke.toLowerCase()}-${data.distance}`;
 
     const submissionData = {
         eventId: eventId,
         eventName: data.eventName,
         time: data.time,
         date: data.date.toISOString(),
+        distance: data.distance,
+        stroke: data.stroke,
         userProfileId: user.uid,
     };
 
@@ -106,12 +113,37 @@ export function AddCompetitionForm({ isOpen, onOpenChange }: AddCompetitionFormP
               <Label htmlFor="eventName">Nome da Prova</Label>
               <Input
                 id="eventName"
-                placeholder="Ex: 100m Livre"
+                placeholder="Ex: 100m Livre, Torneio Regional"
                 {...register('eventName')}
               />
               {errors.eventName && (
                 <p className="text-sm text-destructive">{errors.eventName.message}</p>
               )}
+            </div>
+             <div className="grid grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                    <Label htmlFor="distance">Distância (metros)</Label>
+                    <Input
+                        id="distance"
+                        type="number"
+                        placeholder="Ex: 100"
+                        {...register('distance')}
+                    />
+                    {errors.distance && (
+                        <p className="text-sm text-destructive">{errors.distance.message}</p>
+                    )}
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="stroke">Estilo</Label>
+                    <Input
+                        id="stroke"
+                        placeholder="Ex: Livre"
+                        {...register('stroke')}
+                    />
+                    {errors.stroke && (
+                        <p className="text-sm text-destructive">{errors.stroke.message}</p>
+                    )}
+                </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="time">Tempo (em segundos)</Label>
@@ -125,6 +157,7 @@ export function AddCompetitionForm({ isOpen, onOpenChange }: AddCompetitionFormP
                     step="0.01"
                     placeholder="Ex: 58.43"
                     {...field}
+                    value={field.value ?? ''}
                     onChange={e => field.onChange(parseFloat(e.target.value))}
                   />
                 )}
