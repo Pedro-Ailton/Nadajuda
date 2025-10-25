@@ -5,15 +5,15 @@
 @layer base {
   :root {
     --background: 235 41% 88%;
-    --foreground: 237 56% 21%;
+    --foreground: 244 89% 20%;
     --card: 235 41% 93%;
-    --card-foreground: 237 56% 21%;
+    --card-foreground: 244 89% 20%;
     --popover: 235 41% 93%;
-    --popover-foreground: 237 56% 21%;
+    --popover-foreground: 244 89% 20%;
     --primary: 237 54% 32%;
     --primary-foreground: 220 20% 98%;
     --secondary: 238 26% 61%;
-    --secondary-foreground: 237 56% 21%;
+    --secondary-foreground: 244 89% 20%;
     --muted: 235 41% 80%;
     --muted-foreground: 237 34% 39%;
     --accent: 237 34% 39%;
@@ -26,17 +26,17 @@
     --chart-1: 237 54% 32%;
     --chart-2: 237 34% 39%;
     --chart-3: 238 26% 61%;
-    --chart-4: 237 56% 21%;
+    --chart-4: 244 89% 20%;
     --chart-5: 237 30% 50%;
     --radius: 0.5rem;
-    --sidebar-background: 237 56% 21%;
-    --sidebar-foreground: 235 41% 88%;
-    --sidebar-primary: 235 41% 88%;
-    --sidebar-primary-foreground: 237 56% 21%;
+    --sidebar-background: 244 89% 88%;
+    --sidebar-foreground: 244 89% 20%;
+    --sidebar-primary: 244 89% 20%;
+    --sidebar-primary-foreground: 244 89% 88%;
     --sidebar-accent: 237 54% 32%;
     --sidebar-accent-foreground: 235 41% 93%;
     --sidebar-border: 237 54% 32%;
-    --sidebar-ring: 235 41% 93%;
+    --sidebar-ring: 244 89% 20%;
   }
   .dark {
     --background: 237 56% 10%;
@@ -63,14 +63,14 @@
     --chart-3: 237 34% 39%;
     --chart-4: 237 30% 50%;
     --chart-5: 237 54% 32%;
-    --sidebar-background: 237 56% 8%;
-    --sidebar-foreground: 235 41% 88%;
-    --sidebar-primary: 235 41% 88%;
-    --sidebar-primary-foreground: 237 56% 8%;
-    --sidebar-accent: 237 56% 15%;
+    --sidebar-background: 244 89% 88%;
+    --sidebar-foreground: 244 89% 20%;
+    --sidebar-primary: 244 89% 20%;
+    --sidebar-primary-foreground: 244 89% 88%;
+    --sidebar-accent: 237 54% 32%;
     --sidebar-accent-foreground: 235 41% 93%;
-    --sidebar-border: 237 56% 15%;
-    --sidebar-ring: 235 41% 93%;
+    --sidebar-border: 237 54% 32%;
+    --sidebar-ring: 244 89% 20%;
   }
 }
 
