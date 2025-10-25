@@ -24,10 +24,9 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { Event as ProvaType } from '@/lib/types';
-
 
 const competitionSchema = z.object({
+  eventName: z.string().min(1, 'O nome da prova é obrigatório.'),
   time: z.coerce.number().positive('O tempo deve ser um número positivo.'),
   date: z.date({ required_error: 'A data da competição é obrigatória.' }),
 });
@@ -35,11 +34,11 @@ const competitionSchema = z.object({
 type CompetitionFormData = z.infer<typeof competitionSchema>;
 
 type AddCompetitionFormProps = {
-    prova: ProvaType | null;
+    isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
 }
 
-export function AddCompetitionForm({ prova, onOpenChange }: AddCompetitionFormProps) {
+export function AddCompetitionForm({ isOpen, onOpenChange }: AddCompetitionFormProps) {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -47,24 +46,27 @@ export function AddCompetitionForm({ prova, onOpenChange }: AddCompetitionFormPr
   const {
     handleSubmit,
     control,
+    register,
     reset,
     formState: { errors },
   } = useForm<CompetitionFormData>({
     resolver: zodResolver(competitionSchema),
     defaultValues: {
-      time: undefined,
-      date: undefined,
+        eventName: '',
+        time: undefined,
+        date: undefined,
     }
   });
 
   useEffect(() => {
-    // Reset form when dialog closes or opens with a new prova
-    reset({ time: undefined, date: undefined });
-  }, [prova, reset]);
+    if (!isOpen) {
+        reset();
+    }
+  }, [isOpen, reset]);
 
 
   const onSubmit = (data: CompetitionFormData) => {
-    if (!user || !firestore || !prova) return;
+    if (!user || !firestore) return;
 
     const competitionTimesCollection = collection(
       firestore,
@@ -73,9 +75,11 @@ export function AddCompetitionForm({ prova, onOpenChange }: AddCompetitionFormPr
       'competitionTimes'
     );
     
+    const eventId = data.eventName.toLowerCase().replace(/ /g, '-');
+
     const submissionData = {
-        eventId: prova.id,
-        eventName: prova.name,
+        eventId: eventId,
+        eventName: data.eventName,
         time: data.time,
         date: data.date.toISOString(),
         userProfileId: user.uid,
@@ -85,19 +89,30 @@ export function AddCompetitionForm({ prova, onOpenChange }: AddCompetitionFormPr
 
     toast({
       title: 'Sucesso!',
-      description: `Tempo para ${prova.name} foi registrado.`,
+      description: `Tempo para ${data.eventName} foi registrado.`,
     });
 
     onOpenChange(false);
   };
 
   return (
-    <Dialog open={!!prova} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Registrar Tempo para {prova?.name}</DialogTitle>
+          <DialogTitle>Registrar Novo Tempo de Competição</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="eventName">Nome da Prova</Label>
+              <Input
+                id="eventName"
+                placeholder="Ex: 100m Livre"
+                {...register('eventName')}
+              />
+              {errors.eventName && (
+                <p className="text-sm text-destructive">{errors.eventName.message}</p>
+              )}
+            </div>
             <div className="space-y-2">
               <Label htmlFor="time">Tempo (em segundos)</Label>
               <Controller
@@ -110,6 +125,7 @@ export function AddCompetitionForm({ prova, onOpenChange }: AddCompetitionFormPr
                     step="0.01"
                     placeholder="Ex: 58.43"
                     {...field}
+                    onChange={e => field.onChange(parseFloat(e.target.value))}
                   />
                 )}
               />
