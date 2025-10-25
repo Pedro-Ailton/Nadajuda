@@ -10,10 +10,10 @@ import {
 import { Home, Flame, Trophy, User } from 'lucide-react';
 
 const menuItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: Home },
-  { href: '/workouts', label: 'Workouts', icon: Flame },
-  { href: '/competitions', label: 'Competitions', icon: Trophy },
-  { href: '/profile', label: 'Profile', icon: User },
+  { href: '/dashboard', label: 'Painel', icon: Home },
+  { href: '/workouts', label: 'Treinos', icon: Flame },
+  { href: '/competitions', label: 'Competições', icon: Trophy },
+  { href: '/profile', label: 'Perfil', icon: User },
 ];
 
 export function NavMenu() {

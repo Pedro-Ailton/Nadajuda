@@ -10,24 +10,37 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoginForm } from './login-form';
 import { SignupForm } from './signup-form';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function LoginPage() {
   const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
   const router = useRouter();
 
   useEffect(() => {
     if (!isUserLoading && user) {
-      router.push('/dashboard');
+      const checkUserProfile = async () => {
+        if(firestore) {
+          const userDocRef = doc(firestore, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            router.push('/dashboard');
+          } else {
+            router.push('/personalize');
+          }
+        }
+      };
+      checkUserProfile();
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, router, firestore]);
 
   if (isUserLoading || user) {
      return (
       <div className="flex h-screen w-full items-center justify-center">
-        <div className="text-xl font-semibold">Loading...</div>
+        <div className="text-xl font-semibold">Carregando...</div>
       </div>
     );
   }
@@ -39,15 +52,15 @@ export default function LoginPage() {
       </div>
       <Tabs defaultValue="login" className="w-full max-w-md">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="login">Login</TabsTrigger>
-          <TabsTrigger value="signup">Sign Up</TabsTrigger>
+          <TabsTrigger value="login">Entrar</TabsTrigger>
+          <TabsTrigger value="signup">Criar Conta</TabsTrigger>
         </TabsList>
         <TabsContent value="login">
           <Card>
             <CardHeader>
-              <CardTitle>Welcome Back</CardTitle>
+              <CardTitle>Bem-vindo de Volta</CardTitle>
               <CardDescription>
-                Sign in to your SwimWise account to continue.
+                Faça login na sua conta NadAjuda para continuar.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -58,9 +71,9 @@ export default function LoginPage() {
         <TabsContent value="signup">
           <Card>
             <CardHeader>
-              <CardTitle>Create an Account</CardTitle>
+              <CardTitle>Crie uma Conta</CardTitle>
               <CardDescription>
-                Get started with SwimWise by creating your account.
+                Comece a usar o NadAjuda criando sua conta.
               </CardDescription>
             </CardHeader>
             <CardContent>

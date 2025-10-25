@@ -88,7 +88,7 @@ export function PerformanceChart({ competitions }: PerformanceChartProps) {
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          tickFormatter={(value) => new Date(value).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' })}
         />
         <YAxis
           tickFormatter={(value) => `${value}s`}

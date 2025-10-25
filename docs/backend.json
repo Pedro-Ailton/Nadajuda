@@ -4,11 +4,11 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
       "type": "object",
-      "description": "Represents a user's profile in the SwimWise application.",
+      "description": "Represents a user's profile in the NadAjuda application.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the UserProfile entity."
+          "description": "Unique identifier for the UserProfile entity (matches Firebase Auth UID)."
         },
         "name": {
           "type": "string",
@@ -27,12 +27,16 @@
         "personalNotes": {
           "type": "string",
           "description": "Personal notes or information provided by the user."
+        },
+        "avatarUrl": {
+            "type": "string",
+            "description": "URL for the user's avatar image.",
+            "format": "uri"
         }
       },
       "required": [
         "id",
         "name",
-        "dateOfBirth",
         "email"
       ]
     },
@@ -283,6 +287,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to manage user profiles, competition times, workouts, workout items, and events for the SwimWise application. It emphasizes authorization independence, clarity, and scalability, aligning with the core design principles. User profiles are stored under `/users/{userId}`, providing secure, path-based ownership. Competition times, workouts, and workout items are stored as subcollections under the user's profile, ensuring that only the user has access to their data. Events are stored in a top-level collection, `/events`, assuming they are global and accessible to all users. This design enforces consistent security rules based on ownership and avoids complex authorization logic. This structure facilitates simple, robust, and easily debuggable security rules, as access control is primarily based on user ID and path-based ownership. This eliminates the need for complex `get()` calls in security rules and enables atomic operations.\n\nTo achieve Authorization Independence, UserProfile ID is denormalized in all subcollections for simple and safe rules.\n\nQAPs are satisfied due to segregation of data. All `list` operations will be secure because only the authenticated user will be able to access resources under `/users/{userId}` path."
+    "reasoning": "The Firestore structure is designed to manage user profiles, competition times, workouts, workout items, and events for the NadAjuda application. It emphasizes authorization independence, clarity, and scalability, aligning with the core design principles. User profiles are stored under `/users/{userId}`, providing secure, path-based ownership. Competition times, workouts, and workout items are stored as subcollections under the user's profile, ensuring that only the user has access to their data. Events are stored in a top-level collection, `/events`, assuming they are global and accessible to all users. This design enforces consistent security rules based on ownership and avoids complex authorization logic. This structure facilitates simple, robust, and easily debuggable security rules, as access control is primarily based on user ID and path-based ownership. This eliminates the need for complex `get()` calls in security rules and enables atomic operations.\n\nTo achieve Authorization Independence, UserProfile ID is denormalized in all subcollections for simple and safe rules.\n\nQAPs are satisfied due to segregation of data. All `list` operations will be secure because only the authenticated user will be able to access resources under `/users/{userId}` path."
   }
 }

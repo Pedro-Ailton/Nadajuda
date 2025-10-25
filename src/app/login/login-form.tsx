@@ -20,8 +20,8 @@ import { useState } from 'react';
 import { FirebaseError } from 'firebase/app';
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
-  password: z.string().min(1, { message: 'Password is required.' }),
+  email: z.string().email({ message: 'Por favor, insira um email válido.' }),
+  password: z.string().min(1, { message: 'A senha é obrigatória.' }),
 });
 
 export function LoginForm() {
@@ -46,14 +46,14 @@ export function LoginForm() {
        if (error instanceof FirebaseError) {
         toast({
             variant: 'destructive',
-            title: 'Login Failed',
+            title: 'Falha no Login',
             description: error.message,
         });
       } else {
          toast({
             variant: 'destructive',
-            title: 'Login Failed',
-            description: 'An unexpected error occurred.',
+            title: 'Falha no Login',
+            description: 'Ocorreu um erro inesperado.',
         });
       }
     } finally {
@@ -71,7 +71,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="you@example.com" {...field} />
+                <Input placeholder="voce@exemplo.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -82,7 +82,7 @@ export function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>Senha</FormLabel>
               <FormControl>
                 <Input type="password" placeholder="••••••••" {...field} />
               </FormControl>
@@ -91,7 +91,7 @@ export function LoginForm() {
           )}
         />
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? 'Signing In...' : 'Sign In'}
+          {isLoading ? 'Entrando...' : 'Entrar'}
         </Button>
       </form>
     </Form>

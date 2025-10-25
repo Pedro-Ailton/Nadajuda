@@ -5,8 +5,8 @@ import { FirebaseClientProvider } from "@/firebase/client-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SwimWise",
-  description: "Personalized swimming performance tracker and AI coach.",
+  title: "NadAjuda",
+  description: "Seu assistente de natação personalizado com IA.",
 };
 
 export default function RootLayout({
@@ -15,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

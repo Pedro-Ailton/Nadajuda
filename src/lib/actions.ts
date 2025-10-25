@@ -14,6 +14,6 @@ export async function generateWorkoutSuggestionsAction(
     return { success: true, data: suggestions };
   } catch (error) {
     console.error(error);
-    return { success: false, error: 'Failed to generate workout suggestions.' };
+    return { success: false, error: 'Falha ao gerar sugestões de treino.' };
   }
 }

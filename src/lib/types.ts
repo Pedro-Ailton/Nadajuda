@@ -13,9 +13,10 @@ export type Workout = {
 };
 
 export type UserProfile = {
+  id: string;
   name: string;
-  dob: Date;
+  dateOfBirth?: string;
   email: string;
-  notes: string;
-  avatarUrl: string;
+  personalNotes?: string;
+  avatarUrl?: string;
 };

@@ -38,16 +38,16 @@ import {
 
 const formSchema = z.object({
   pastPerformance: z.string().min(10, {
-    message: 'Please provide some details on past performance.',
+    message: 'Por favor, forneça alguns detalhes sobre seu desempenho anterior.',
   }),
   goals: z.string().min(10, {
-    message: 'Please describe your goals.',
+    message: 'Por favor, descreva seus objetivos.',
   }),
   athleteType: z.string({
-    required_error: 'Please select an athlete type.',
+    required_error: 'Por favor, selecione um tipo de atleta.',
   }),
   eventPreference: z.string({
-    required_error: 'Please select an event preference.',
+    required_error: 'Por favor, selecione uma preferência de evento.',
   }),
 });
 
@@ -75,7 +75,7 @@ export function WorkoutSuggestions() {
     } else {
       toast({
         variant: 'destructive',
-        title: 'Error',
+        title: 'Erro',
         description: result.error,
       });
     }
@@ -90,11 +90,10 @@ export function WorkoutSuggestions() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BrainCircuit />
-              AI Workout Suggestions
+              Sugestões de Treino com IA
             </CardTitle>
             <CardDescription>
-              Fill in your details to get personalized workout ideas from our AI
-              coach.
+              Preencha seus dados para obter ideias de treino personalizadas do nosso treinador de IA.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -103,10 +102,10 @@ export function WorkoutSuggestions() {
               name="pastPerformance"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Past Performance Summary</FormLabel>
+                  <FormLabel>Resumo do Desempenho Anterior</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="e.g., 'Recent 50m free time is 25.5s. Struggling with butterfly endurance.'"
+                      placeholder="Ex: 'Meu tempo recente nos 50m livre é 25.5s. Tenho dificuldade na resistência do nado borboleta.'"
                       {...field}
                     />
                   </FormControl>
@@ -119,10 +118,10 @@ export function WorkoutSuggestions() {
               name="goals"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Training Goals</FormLabel>
+                  <FormLabel>Objetivos de Treinamento</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="e.g., 'Break 55s in 100m fly. Improve underwater kicks.'"
+                      placeholder="Ex: 'Baixar de 55s nos 100m borboleta. Melhorar as pernadas submersas.'"
                       {...field}
                     />
                   </FormControl>
@@ -135,18 +134,18 @@ export function WorkoutSuggestions() {
               name="athleteType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Athlete Type</FormLabel>
+                  <FormLabel>Tipo de Atleta</FormLabel>
                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select your primary strength" />
+                        <SelectValue placeholder="Selecione sua principal força" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="sprinter">Sprinter (50m-100m)</SelectItem>
-                      <SelectItem value="mid-distance">Mid-Distance (200m-400m)</SelectItem>
-                      <SelectItem value="distance">Distance (800m+)</SelectItem>
-                      <SelectItem value="all-rounder">All-Rounder (IM)</SelectItem>
+                      <SelectItem value="sprinter">Velocista (50m-100m)</SelectItem>
+                      <SelectItem value="mid-distance">Meio-Fundo (200m-400m)</SelectItem>
+                      <SelectItem value="distance">Fundo (800m+)</SelectItem>
+                      <SelectItem value="all-rounder">Completo (Medley)</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -158,19 +157,19 @@ export function WorkoutSuggestions() {
               name="eventPreference"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Preferred Event/Stroke</FormLabel>
+                  <FormLabel>Evento/Estilo Preferido</FormLabel>
                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select your favorite event" />
-                      </SelectTrigger>
+                        <SelectValue placeholder="Selecione seu evento favorito" />
+                      </Trigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="freestyle">Freestyle</SelectItem>
-                      <SelectItem value="backstroke">Backstroke</SelectItem>
-                      <SelectItem value="breaststroke">Breaststroke</SelectItem>
-                      <SelectItem value="butterfly">Butterfly</SelectItem>
-                       <SelectItem value="individual-medley">Individual Medley (IM)</SelectItem>
+                      <SelectItem value="freestyle">Livre</SelectItem>
+                      <SelectItem value="backstroke">Costas</SelectItem>
+                      <SelectItem value="breaststroke">Peito</SelectItem>
+                      <SelectItem value="butterfly">Borboleta</SelectItem>
+                       <SelectItem value="individual-medley">Medley Individual</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -180,7 +179,7 @@ export function WorkoutSuggestions() {
           </CardContent>
           <CardFooter>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Generating...' : 'Get Suggestions'}
+              {isLoading ? 'Gerando...' : 'Obter Sugestões'}
             </Button>
           </CardFooter>
         </form>
@@ -188,7 +187,7 @@ export function WorkoutSuggestions() {
 
       {(isLoading || suggestion) && (
         <CardContent>
-          <CardTitle className="text-lg mb-4">Your Suggested Workout</CardTitle>
+          <CardTitle className="text-lg mb-4">Seu Treino Sugerido</CardTitle>
             {isLoading && (
                  <div className="space-y-2">
                     <Skeleton className="h-4 w-3/4" />

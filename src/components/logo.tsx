@@ -7,7 +7,7 @@ export function Logo() {
         <Waves className="text-primary-foreground" />
       </div>
       <h1 className="text-2xl font-headline font-bold text-foreground">
-        SwimWise
+        NadAjuda
       </h1>
     </div>
   );

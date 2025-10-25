@@ -1,7 +1,9 @@
-import { mockCompetitions, mockUserProfile } from '@/lib/mock-data';
+'use client';
+import { mockCompetitions } from '@/lib/mock-data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trophy, Zap, Clock } from 'lucide-react';
 import { PerformanceChart } from './performance-chart';
+import { useUser } from '@/firebase';
 
 function getMostFrequentEvents(competitions: typeof mockCompetitions) {
   const eventCounts = competitions.reduce((acc, comp) => {
@@ -15,22 +17,25 @@ function getMostFrequentEvents(competitions: typeof mockCompetitions) {
 }
 
 function getLatestBestTime(competitions: typeof mockCompetitions) {
-    if (competitions.length === 0) return { time: 'N/A', event: 'No data' };
+    if (competitions.length === 0) return { time: 'N/A', event: 'Sem dados' };
     const latestCompetition = competitions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
     return { time: latestCompetition.time, event: latestCompetition.event };
 }
 
 
 export default function DashboardPage() {
+  const { user } = useUser();
   const mostFrequentEvents = getMostFrequentEvents(mockCompetitions);
   const bestTime = getLatestBestTime(mockCompetitions);
   const totalCompetitions = mockCompetitions.length;
+
+  const userName = user?.displayName?.split(' ')[0] || 'Nadador(a)';
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
       <div className="flex items-center">
         <h1 className="font-headline text-3xl font-semibold">
-          Welcome, {mockUserProfile.name.split(' ')[0]}!
+          Bem-vindo(a), {userName}!
         </h1>
       </div>
 
@@ -38,7 +43,7 @@ export default function DashboardPage() {
         <Card className="shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Latest Best Time
+              Melhor Tempo Recente
             </CardTitle>
             <Zap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -50,20 +55,20 @@ export default function DashboardPage() {
         <Card className="shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Competitions
+              Total de Competições
             </CardTitle>
             <Trophy className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalCompetitions}</div>
             <p className="text-xs text-muted-foreground">
-              Across all events
+              Em todos os eventos
             </p>
           </CardContent>
         </Card>
          <Card className="shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Most Frequent Events</CardTitle>
+            <CardTitle className="text-sm font-medium">Eventos Mais Frequentes</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -71,7 +76,7 @@ export default function DashboardPage() {
               {mostFrequentEvents.map(([event, count]) => (
                 <div key={event} className="flex justify-between text-sm">
                   <span className="font-medium">{event}</span>
-                  <span className="text-muted-foreground">{count} times</span>
+                  <span className="text-muted-foreground">{count} vezes</span>
                 </div>
               ))}
             </div>
@@ -82,7 +87,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-6">
         <Card className="shadow-md">
           <CardHeader>
-            <CardTitle>Performance Analysis</CardTitle>
+            <CardTitle>Análise de Performance</CardTitle>
           </CardHeader>
           <CardContent>
             <PerformanceChart competitions={mockCompetitions} />

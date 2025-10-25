@@ -15,7 +15,7 @@ export default function WorkoutsPage() {
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
       <div className="flex items-center">
-        <h1 className="font-headline text-3xl font-semibold">Workouts</h1>
+        <h1 className="font-headline text-3xl font-semibold">Treinos</h1>
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -24,16 +24,16 @@ export default function WorkoutsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Flame />
-                Workout Log
+                Registro de Treinos
               </CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Workout</TableHead>
-                    <TableHead>Estimated Time</TableHead>
-                    <TableHead>Actual Time</TableHead>
+                    <TableHead>Treino</TableHead>
+                    <TableHead>Tempo Estimado</TableHead>
+                    <TableHead>Tempo Real</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

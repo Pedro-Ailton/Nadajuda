@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { mockUserProfile } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,45 +11,134 @@ import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { useState } from 'react';
+import { ptBR } from 'date-fns/locale';
+import { useEffect, useState } from 'react';
+import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useDoc } from '@/firebase/firestore/use-doc';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useToast } from '@/hooks/use-toast';
+import type { UserProfile } from '@/lib/types';
+
 
 export default function ProfilePage() {
-  const [date, setDate] = useState<Date | undefined>(mockUserProfile.dob);
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  
+  const { data: userProfile, isLoading } = useDoc<UserProfile>(userDocRef);
+
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [date, setDate] = useState<Date | undefined>();
+  const [notes, setNotes] = useState('');
+
+  useEffect(() => {
+    if (userProfile) {
+      setName(userProfile.name);
+      setEmail(userProfile.email);
+      setDate(userProfile.dateOfBirth ? new Date(userProfile.dateOfBirth) : undefined);
+      setNotes(userProfile.personalNotes || '');
+    } else if (user) {
+      setName(user.displayName || '');
+      setEmail(user.email || '');
+    }
+  }, [userProfile, user]);
+
+  const handleSaveChanges = () => {
+    if (!userDocRef) return;
+    const updatedProfile: Partial<UserProfile> = {
+      name,
+      email,
+      dateOfBirth: date?.toISOString(),
+      personalNotes: notes,
+    };
+    setDocumentNonBlocking(userDocRef, updatedProfile, { merge: true });
+    toast({
+      title: 'Sucesso!',
+      description: 'Seu perfil foi atualizado.',
+    });
+  };
+  
+  if (isLoading) {
+    return (
+       <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+        <div className="flex items-center">
+            <h1 className="font-headline text-3xl font-semibold">Meu Perfil</h1>
+        </div>
+         <Card className="shadow-md">
+            <CardHeader>
+                <CardTitle>Informações Pessoais</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-8">
+                <div className="flex items-center gap-6">
+                    <Skeleton className="h-20 w-20 rounded-full" />
+                    <Skeleton className="h-10 w-32" />
+                </div>
+                <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                     <div className="space-y-2 md:col-span-2">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-32 w-full" />
+                    </div>
+                </div>
+            </CardContent>
+         </Card>
+       </div>
+    )
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
       <div className="flex items-center">
-        <h1 className="font-headline text-3xl font-semibold">My Profile</h1>
+        <h1 className="font-headline text-3xl font-semibold">Meu Perfil</h1>
       </div>
 
       <Card className="shadow-md">
         <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
+          <CardTitle>Informações Pessoais</CardTitle>
         </CardHeader>
         <CardContent className="space-y-8">
           <div className="flex items-center gap-6">
             <Image
-              src={mockUserProfile.avatarUrl}
+              src={userProfile?.avatarUrl || "https://picsum.photos/seed/10/200/200"}
               alt="User Avatar"
               width={80}
               height={80}
               className="rounded-full"
               data-ai-hint="portrait person"
             />
-            <Button variant="outline">Change Avatar</Button>
+            <Button variant="outline">Mudar Avatar</Button>
           </div>
 
-          <form className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input id="name" defaultValue={mockUserProfile.name} />
+              <Label htmlFor="name">Nome Completo</Label>
+              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input id="email" type="email" defaultValue={mockUserProfile.email} />
+              <Label htmlFor="email">Endereço de Email</Label>
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="dob">Date of Birth</Label>
+                <Label htmlFor="dob">Data de Nascimento</Label>
                  <Popover>
                     <PopoverTrigger asChild>
                     <Button
@@ -62,7 +150,7 @@ export default function ProfilePage() {
                         )}
                     >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date ? format(date, "PPP") : <span>Pick a date</span>}
+                        {date ? format(date, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
                     </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -74,22 +162,24 @@ export default function ProfilePage() {
                         captionLayout="dropdown-buttons"
                         fromYear={1950}
                         toYear={new Date().getFullYear()}
+                        locale={ptBR}
                     />
                     </PopoverContent>
                 </Popover>
             </div>
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="notes">Personal Notes</Label>
+              <Label htmlFor="notes">Notas Pessoais</Label>
               <Textarea
                 id="notes"
-                defaultValue={mockUserProfile.notes}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
                 className="min-h-[120px]"
               />
             </div>
             <div className="md:col-span-2 flex justify-end">
-              <Button>Save Changes</Button>
+              <Button onClick={handleSaveChanges}>Salvar Alterações</Button>
             </div>
-          </form>
+          </div>
         </CardContent>
       </Card>
     </div>
