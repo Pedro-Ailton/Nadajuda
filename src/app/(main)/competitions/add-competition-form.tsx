@@ -16,8 +16,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useUser, useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
+import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Plus } from 'lucide-react';
@@ -25,12 +25,11 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { Event as ProvaType } from '@/lib/types';
 import { ProvaSelect } from './prova-select';
-
 
 const competitionSchema = z.object({
   eventId: z.string({ required_error: 'Selecione uma prova.' }),
+  eventName: z.string(), // Added to schema to hold the name
   time: z.coerce.number().positive('O tempo deve ser um número positivo.'),
   date: z.date({ required_error: 'A data da competição é obrigatória.' }),
 });
@@ -50,19 +49,15 @@ export function AddCompetitionForm() {
     formState: { errors },
   } = useForm<CompetitionFormData>({
     resolver: zodResolver(competitionSchema),
+    defaultValues: {
+      time: undefined,
+      date: undefined,
+    }
   });
 
-  // This logic is now in `prova-select.tsx`
-  // We pass the control object to the child component
   const onSubmit = (data: CompetitionFormData) => {
     if (!user || !firestore) return;
 
-    // Fetch the event name to denormalize it
-    const eventsCollection = collection(firestore, 'events');
-    const q = query(collection(firestore, 'users', user.uid, 'competitionTimes'));
-
-    // This is a simplified way to get the event name.
-    // In a real app, you might already have the events loaded in a context or state.
     const competitionTimesCollection = collection(
       firestore,
       'users',
@@ -71,9 +66,9 @@ export function AddCompetitionForm() {
     );
     
     const submissionData = {
-        ...data,
-        // We'll get the event name from the form data, assuming it's passed from ProvaSelect
-        eventName: (data as any).eventName,
+        eventId: data.eventId,
+        eventName: data.eventName,
+        time: data.time,
         date: data.date.toISOString(),
         userProfileId: user.uid,
     };
@@ -85,7 +80,7 @@ export function AddCompetitionForm() {
       description: 'Sua competição foi registrada.',
     });
 
-    reset({ eventId: undefined, time: undefined, date: undefined });
+    reset({ eventId: undefined, eventName: undefined, time: undefined, date: undefined });
     setOpen(false);
   };
 
@@ -111,7 +106,19 @@ export function AddCompetitionForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="time">Tempo (em segundos)</Label>
-            <Input id="time" type="number" step="0.01" {...(register('time'))} placeholder="Ex: 58.43" />
+            <Controller
+              name="time"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  id="time"
+                  type="number"
+                  step="0.01"
+                  placeholder="Ex: 58.43"
+                  {...field}
+                />
+              )}
+            />
             {errors.time && (
               <p className="text-sm text-destructive">{errors.time.message}</p>
             )}
