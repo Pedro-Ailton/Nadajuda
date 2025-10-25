@@ -39,3 +39,10 @@ export type CompetitionTime = {
     time: number; // in seconds
     date: string; // ISO 8601
 };
+
+export type Event = {
+    id: string;
+    name: string;
+    distance: number;
+    stroke: string;
+}

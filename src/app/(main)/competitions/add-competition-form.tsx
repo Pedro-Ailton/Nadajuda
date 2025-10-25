@@ -16,18 +16,29 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useUser, useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Plus } from 'lucide-react';
+import { CalendarIcon, Plus, ChevronsUpDown } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import type { Event } from '@/lib/types';
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+  } from "@/components/ui/command"
+import { Check } from 'lucide-react';
+
 
 const competitionSchema = z.object({
-  eventName: z.string().min(1, 'O nome do evento é obrigatório.'),
+  eventId: z.string({ required_error: 'Selecione um evento.' }),
+  eventName: z.string(),
   time: z.coerce.number().positive('O tempo deve ser um número positivo.'),
   date: z.date({ required_error: 'A data da competição é obrigatória.' }),
 });
@@ -36,19 +47,31 @@ type CompetitionFormData = z.infer<typeof competitionSchema>;
 
 export function AddCompetitionForm() {
   const [open, setOpen] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+
+  const eventsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'events'));
+  }, [firestore]);
+
+  const { data: events, isLoading: isLoadingEvents } = useCollection<Event>(eventsQuery);
 
   const {
     register,
     handleSubmit,
     control,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<CompetitionFormData>({
     resolver: zodResolver(competitionSchema),
   });
+
+  const selectedEventId = watch('eventId');
 
   const onSubmit = (data: CompetitionFormData) => {
     if (!user || !firestore) return;
@@ -59,19 +82,23 @@ export function AddCompetitionForm() {
       user.uid,
       'competitionTimes'
     );
+    
+    // We don't need to store eventName if we have eventId, but it makes displaying easier for now.
+    // In a more complex app, you'd fetch the event details using the eventId.
+    const submissionData = {
+        ...data,
+        date: data.date.toISOString(),
+        userProfileId: user.uid,
+    };
 
-    addDocumentNonBlocking(competitionTimesCollection, {
-      ...data,
-      date: data.date.toISOString(),
-      userProfileId: user.uid,
-    });
+    addDocumentNonBlocking(competitionTimesCollection, submissionData);
 
     toast({
       title: 'Sucesso!',
       description: 'Sua competição foi registrada.',
     });
 
-    reset({ eventName: '', time: undefined, date: undefined });
+    reset({ eventId: undefined, eventName: undefined, time: undefined, date: undefined });
     setOpen(false);
   };
 
@@ -89,10 +116,58 @@ export function AddCompetitionForm() {
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="eventName">Nome do Evento</Label>
-            <Input id="eventName" {...register('eventName')} placeholder="Ex: 100m Livre" />
-            {errors.eventName && (
-              <p className="text-sm text-destructive">{errors.eventName.message}</p>
+            <Label>Evento</Label>
+            <Controller
+                name="eventId"
+                control={control}
+                render={({ field }) => (
+                    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={popoverOpen}
+                        className="w-full justify-between font-normal"
+                        disabled={isLoadingEvents}
+                      >
+                        {selectedEventId
+                          ? events?.find((event) => event.id === selectedEventId)?.name
+                          : "Selecione um evento..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                      <Command>
+                        <CommandInput placeholder="Procurar evento..." />
+                        <CommandEmpty>Nenhum evento encontrado.</CommandEmpty>
+                        <CommandGroup>
+                          {events?.map((event) => (
+                            <CommandItem
+                              key={event.id}
+                              value={event.id}
+                              onSelect={(currentValue) => {
+                                setValue("eventId", currentValue === selectedEventId ? "" : currentValue);
+                                setValue("eventName", event.name);
+                                setPopoverOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedEventId === event.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {event.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                )}
+            />
+             {errors.eventId && (
+              <p className="text-sm text-destructive">{errors.eventId.message}</p>
             )}
           </div>
           <div className="space-y-2">
