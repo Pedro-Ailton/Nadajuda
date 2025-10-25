@@ -33,7 +33,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { AddEventData } from './add-event-data';
 
 
 const competitionSchema = z.object({
@@ -107,8 +106,6 @@ export function AddCompetitionForm() {
   };
 
   return (
-    <>
-    <AddEventData />
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
@@ -197,6 +194,5 @@ export function AddCompetitionForm() {
         </form>
       </DialogContent>
     </Dialog>
-    </>
   );
 }
