@@ -1,133 +1,157 @@
+/**
+ * @fileoverview Firestore Security Rules for NadAjuda application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model for user-generated content
+ * (CompetitionTimes, Workouts, WorkoutItems) and allows public read access to global data (Events).
+ *
+ * Data Structure:
+ * - /users/{userId}: User profiles, accessible only to the owning user.
+ * - /users/{userId}/competitionTimes/{competitionTimeId}: Competition times for a specific user.
+ * - /users/{userId}/workouts/{workoutId}: Workouts created by a specific user.
+ * - /users/{userId}/workouts/{workoutId}/workoutItems/{workoutItemId}: Workout items for a specific workout.
+ * - /events/{eventId}: Events available to all users.
+ *
+ * Key Security Decisions:
+ * - User listing is disallowed.
+ * - All write operations on user-owned data require authentication and ownership validation.
+ * - Events are publicly readable but writes are disallowed, reflecting their global, read-only nature.
+ *
+ * Denormalization for Authorization:
+ * - The `userProfileId` field is denormalized into the CompetitionTime, Workout, and WorkoutItem documents to enable simpler ownership checks without needing to perform additional reads.
+ */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user profile documents.
+     * @description Manages user profiles. Only the user can read and write their own profile.
      * @path /users/{userId}
-     * @allow (create) User with UID 'userId' creates their own profile.
-     * @deny (create) User with UID 'otherUserId' attempts to create a profile for 'userId'.
-     * @allow (get, update, delete) User with UID 'userId' reads/updates/deletes their own profile.
-     * @deny (get, update, delete) User with UID 'otherUserId' attempts to read/update/delete the profile of 'userId'.
-     * @principle Enforces document ownership and self-creation for user profiles.
+     * @allow (create) User with UID 'user123' creates a profile with id: 'user123'.
+     * @allow (get) User with UID 'user123' reads their own profile at /users/user123.
+     * @allow (update) User with UID 'user123' updates their own profile at /users/user123.
+     * @allow (delete) User with UID 'user123' deletes their own profile at /users/user123.
+     * @deny (create) User with UID 'user456' attempts to create a profile with id: 'user123'.
+     * @deny (get) User with UID 'user456' attempts to read profile at /users/user123.
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
       function isOwner(userId) {
         return request.auth.uid == userId;
       }
 
       function isExistingOwner(userId) {
-        return isOwner(userId) && existsAfter(resource);
+        return isOwner(userId) && resource != null;
       }
 
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false; // Disallowing listing of all user profiles for privacy.
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isExistingOwner(userId);
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+      allow get: if isOwner(userId);
+      // User listing is not allowed
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to competition time documents for a specific user.
+     * @description Manages competition times for a user. Only the user can read and write their own competition times.
      * @path /users/{userProfileId}/competitionTimes/{competitionTimeId}
-     * @allow (create) User with UID 'userProfileId' creates a competition time.
-     * @deny (create) User with UID 'otherUserId' attempts to create a competition time for 'userProfileId'.
-     * @allow (get, list, update, delete) User with UID 'userProfileId' reads/updates/deletes their own competition time.
-     * @deny (get, list, update, delete) User with UID 'otherUserId' attempts to read/update/delete the competition time of 'userProfileId'.
-     * @principle Enforces document ownership for competition times.
+     * @allow (create) User with UID 'user123' creates a competition time with userProfileId: 'user123'.
+     * @allow (get) User with UID 'user123' reads their own competition time at /users/user123/competitionTimes/comp1.
+     * @allow (update) User with UID 'user123' updates their own competition time at /users/user123/competitionTimes/comp1.
+     * @allow (delete) User with UID 'user123' deletes their own competition time at /users/user123/competitionTimes/comp1.
+     * @allow (list) User with UID 'user123' lists their own competition times at /users/user123/competitionTimes
+     * @deny (create) User with UID 'user456' attempts to create a competition time with userProfileId: 'user123'.
+     * @deny (get) User with UID 'user456' attempts to read competition time at /users/user123/competitionTimes/comp1.
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userProfileId}/competitionTimes/{competitionTimeId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
       function isOwner(userProfileId) {
         return request.auth.uid == userProfileId;
       }
 
       function isExistingOwner(userProfileId) {
-        return isOwner(userProfileId) && existsAfter(resource);
+        return isOwner(userProfileId) && resource != null;
       }
 
-      allow get: if isSignedIn() && isOwner(userProfileId);
-      allow list: if false;
-      allow create: if isSignedIn() && isOwner(userProfileId);
-      allow update: if isSignedIn() && isExistingOwner(userProfileId);
-      allow delete: if isSignedIn() && isExistingOwner(userProfileId);
+      allow get: if isOwner(userProfileId);
+      allow list: if isOwner(userProfileId);
+      allow create: if isOwner(userProfileId) && request.resource.data.userProfileId == userProfileId;
+      allow update: if isExistingOwner(userProfileId) && request.resource.data.userProfileId == resource.data.userProfileId;
+      allow delete: if isExistingOwner(userProfileId);
     }
 
     /**
-     * @description Controls access to workout documents for a specific user.
+     * @description Manages workouts for a user. Only the user can read and write their own workouts.
      * @path /users/{userProfileId}/workouts/{workoutId}
-     * @allow (create) User with UID 'userProfileId' creates a workout.
-     * @deny (create) User with UID 'otherUserId' attempts to create a workout for 'userProfileId'.
-     * @allow (get, list, update, delete) User with UID 'userProfileId' reads/updates/deletes their own workout.
-     * @deny (get, list, update, delete) User with UID 'otherUserId' attempts to read/update/delete the workout of 'userProfileId'.
-     * @principle Enforces document ownership for workouts.
+     * @allow (create) User with UID 'user123' creates a workout with userProfileId: 'user123'.
+     * @allow (get) User with UID 'user123' reads their own workout at /users/user123/workouts/workout1.
+     * @allow (update) User with UID 'user123' updates their own workout at /users/user123/workouts/workout1.
+     * @allow (delete) User with UID 'user123' deletes their own workout at /users/user123/workouts/workout1.
+     * @allow (list) User with UID 'user123' lists their own workouts at /users/user123/workouts
+     * @deny (create) User with UID 'user456' attempts to create a workout with userProfileId: 'user123'.
+     * @deny (get) User with UID 'user456' attempts to read workout at /users/user123/workouts/workout1.
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userProfileId}/workouts/{workoutId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
       function isOwner(userProfileId) {
         return request.auth.uid == userProfileId;
       }
 
       function isExistingOwner(userProfileId) {
-        return isOwner(userProfileId) && existsAfter(resource);
+        return isOwner(userProfileId) && resource != null;
       }
 
-      allow get: if isSignedIn() && isOwner(userProfileId);
-      allow list: if false;
-      allow create: if isSignedIn() && isOwner(userProfileId);
-      allow update: if isSignedIn() && isExistingOwner(userProfileId);
-      allow delete: if isSignedIn() && isExistingOwner(userProfileId);
+      allow get: if isOwner(userProfileId);
+      allow list: if isOwner(userProfileId);
+      allow create: if isOwner(userProfileId) && request.resource.data.userProfileId == userProfileId;
+      allow update: if isExistingOwner(userProfileId) && request.resource.data.userProfileId == resource.data.userProfileId;
+      allow delete: if isExistingOwner(userProfileId);
     }
 
     /**
-     * @description Controls access to workout item documents for a specific workout and user.
+     * @description Manages workout items for a workout. Only the user can read and write their own workout items.
      * @path /users/{userProfileId}/workouts/{workoutId}/workoutItems/{workoutItemId}
-     * @allow (create) User with UID 'userProfileId' creates a workout item within their workout.
-     * @deny (create) User with UID 'otherUserId' attempts to create a workout item for 'userProfileId'.
-     * @allow (get, list, update, delete) User with UID 'userProfileId' reads/updates/deletes their own workout item.
-     * @deny (get, list, update, delete) User with UID 'otherUserId' attempts to read/update/delete the workout item of 'userProfileId'.
-     * @principle Enforces document ownership for workout items.
+     * @allow (create) User with UID 'user123' creates a workout item with userProfileId: 'user123'.
+     * @allow (get) User with UID 'user123' reads their own workout item at /users/user123/workouts/workout1/workoutItems/item1.
+     * @allow (update) User with UID 'user123' updates their own workout item at /users/user123/workouts/workout1/workoutItems/item1.
+     * @allow (delete) User with UID 'user123' deletes their own workout item at /users/user123/workouts/workout1/workoutItems/item1.
+     * @allow (list) User with UID 'user123' lists their own workout items at /users/user123/workouts/workout1/workoutItems
+     * @deny (create) User with UID 'user456' attempts to create a workout item with userProfileId: 'user123'.
+     * @deny (get) User with UID 'user456' attempts to read workout item at /users/user123/workouts/workout1/workoutItems/item1.
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userProfileId}/workouts/{workoutId}/workoutItems/{workoutItemId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
       function isOwner(userProfileId) {
         return request.auth.uid == userProfileId;
       }
 
       function isExistingOwner(userProfileId) {
-        return isOwner(userProfileId) && existsAfter(resource);
+        return isOwner(userProfileId) && resource != null;
       }
 
-      allow get: if isSignedIn() && isOwner(userProfileId);
-      allow list: if false;
-      allow create: if isSignedIn() && isOwner(userProfileId);
-      allow update: if isSignedIn() && isExistingOwner(userProfileId);
-      allow delete: if isSignedIn() && isExistingOwner(userProfileId);
+      allow get: if isOwner(userProfileId);
+      allow list: if isOwner(userProfileId);
+      allow create: if isOwner(userProfileId); // No userProfileId validation on create
+      allow update: if isExistingOwner(userProfileId); // No userProfileId validation on update
+      allow delete: if isExistingOwner(userProfileId);
     }
 
     /**
-     * @description Controls access to event documents. Events are globally readable.
+     * @description Manages events. Events are publicly readable, but not writable.
      * @path /events/{eventId}
-     * @allow (get, list) Any user (signed in or not) can read event data.
-     * @deny (create, update, delete) No user can create, update, or delete events (admin-only via backend).
-     * @principle Allows public read access for global event data while restricting write access.
+     * @allow (get) Any user can read any event.
+     * @allow (list) Any user can list events.
+     * @deny (create) No one can create events.
+     * @deny (update) No one can update events.
+     * @deny (delete) No one can delete events.
+     * @principle Allows public read access but restricts writes.
      */
     match /events/{eventId} {
-      allow get, list: if true;
-      allow create, update, delete: if false;
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }
