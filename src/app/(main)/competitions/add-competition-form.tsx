@@ -20,20 +20,19 @@ import { useUser, useFirestore, addDocumentNonBlocking, useCollection, useMemoFi
 import { collection, query } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Plus, ChevronsUpDown } from 'lucide-react';
+import { CalendarIcon, Plus } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Event as ProvaType } from '@/lib/types';
 import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-  } from "@/components/ui/command"
-import { Check } from 'lucide-react';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { AddEventData } from './add-event-data';
 
 
@@ -47,7 +46,6 @@ type CompetitionFormData = z.infer<typeof competitionSchema>;
 
 export function AddCompetitionForm() {
   const [open, setOpen] = useState(false);
-  const [popoverOpen, setPopoverOpen] = useState(false);
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -64,14 +62,10 @@ export function AddCompetitionForm() {
     handleSubmit,
     control,
     reset,
-    setValue,
-    watch,
     formState: { errors },
   } = useForm<CompetitionFormData>({
     resolver: zodResolver(competitionSchema),
   });
-
-  const selectedEventId = watch('eventId');
 
   const onSubmit = (data: CompetitionFormData) => {
     if (!user || !firestore || !provas) return;
@@ -96,7 +90,7 @@ export function AddCompetitionForm() {
     
     const submissionData = {
         ...data,
-        eventName: selectedProva.name, // Correctly set eventName
+        eventName: selectedProva.name,
         date: data.date.toISOString(),
         userProfileId: user.uid,
     };
@@ -133,48 +127,18 @@ export function AddCompetitionForm() {
                 name="eventId"
                 control={control}
                 render={({ field }) => (
-                    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={popoverOpen}
-                        className="w-full justify-between font-normal"
-                        disabled={isLoadingProvas}
-                      >
-                        {selectedEventId
-                          ? provas?.find((prova) => prova.id === selectedEventId)?.name
-                          : "Selecione uma prova..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                      <Command>
-                        <CommandInput placeholder="Procurar prova..." />
-                        <CommandEmpty>Nenhuma prova encontrada.</CommandEmpty>
-                        <CommandGroup>
-                          {provas?.map((prova) => (
-                            <CommandItem
-                              key={prova.id}
-                              value={prova.id}
-                              onSelect={(currentValue) => {
-                                setValue("eventId", currentValue === selectedEventId ? "" : currentValue);
-                                setPopoverOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectedEventId === prova.id ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              {prova.name}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoadingProvas}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma prova..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {provas?.map((prova) => (
+                        <SelectItem key={prova.id} value={prova.id}>
+                          {prova.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 )}
             />
              {errors.eventId && (
