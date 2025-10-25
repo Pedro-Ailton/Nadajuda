@@ -1,0 +1,65 @@
+'use server';
+
+/**
+ * @fileOverview AI-powered workout suggestion generator.
+ *
+ * - generateWorkoutSuggestions - A function that generates workout suggestions based on user data.
+ * - GenerateWorkoutSuggestionsInput - The input type for the generateWorkoutSuggestions function.
+ * - GenerateWorkoutSuggestionsOutput - The return type for the generateWorkoutSuggestions function.
+ */
+
+import {ai} from '@/ai/genkit';
+import {z} from 'genkit';
+
+const GenerateWorkoutSuggestionsInputSchema = z.object({
+  pastPerformance:
+    z.string().describe('A summary of the athlete\'s past performance data.'),
+  goals: z.string().describe('The athlete\'s training goals.'),
+  athleteType: z.string().describe('The type of athlete.'),
+  eventPreference: z.string().describe('The athletes preferred event.'),
+});
+export type GenerateWorkoutSuggestionsInput = z.infer<
+  typeof GenerateWorkoutSuggestionsInputSchema
+>;
+
+const GenerateWorkoutSuggestionsOutputSchema = z.object({
+  workoutSuggestions:
+    z.string().describe('Workout suggestions tailored to the athlete\'s data.'),
+});
+export type GenerateWorkoutSuggestionsOutput = z.infer<
+  typeof GenerateWorkoutSuggestionsOutputSchema
+>;
+
+export async function generateWorkoutSuggestions(
+  input: GenerateWorkoutSuggestionsInput
+): Promise<GenerateWorkoutSuggestionsOutput> {
+  return generateWorkoutSuggestionsFlow(input);
+}
+
+const prompt = ai.definePrompt({
+  name: 'generateWorkoutSuggestionsPrompt',
+  input: {schema: GenerateWorkoutSuggestionsInputSchema},
+  output: {schema: GenerateWorkoutSuggestionsOutputSchema},
+  prompt: `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance, goals and preferences.
+
+  Consider the following information about the athlete when generating workout suggestions:
+
+  Past Performance: {{{pastPerformance}}}
+  Goals: {{{goals}}}
+  Type of Athlete: {{{athleteType}}}
+  Preferred Event: {{{eventPreference}}}
+
+  Provide detailed and specific workout suggestions that will help the athlete achieve their goals. Consider available training time and create an actionable plan.`, // Consider available training time and create an actionable plan.
+});
+
+const generateWorkoutSuggestionsFlow = ai.defineFlow(
+  {
+    name: 'generateWorkoutSuggestionsFlow',
+    inputSchema: GenerateWorkoutSuggestionsInputSchema,
+    outputSchema: GenerateWorkoutSuggestionsOutputSchema,
+  },
+  async input => {
+    const {output} = await prompt(input);
+    return output!;
+  }
+);
