@@ -23,9 +23,9 @@ type PerformanceChartProps = {
 };
 
 export function PerformanceChart({ competitions }: PerformanceChartProps) {
-  const { chartData, events } = useMemo(() => {
+  const { chartData, provas } = useMemo(() => {
     if (!competitions || competitions.length === 0) {
-        return { chartData: [], events: [] };
+        return { chartData: [], provas: [] };
     }
 
     const dataByDate: Record<
@@ -47,19 +47,19 @@ export function PerformanceChart({ competitions }: PerformanceChartProps) {
         return new Date(a.date as string).getTime() - new Date(b.date as string).getTime();
     });
 
-    return { chartData: sortedData, events: Array.from(eventSet) };
+    return { chartData: sortedData, provas: Array.from(eventSet) };
   }, [competitions]);
 
   const chartConfig = useMemo(() => {
     const config: ChartConfig = {};
-    events.forEach((event, index) => {
-      config[event] = {
-        label: event,
+    provas.forEach((prova, index) => {
+      config[prova] = {
+        label: prova,
         color: `hsl(var(--chart-${(index % 5) + 1}))`,
       };
     });
     return config;
-  }, [events]);
+  }, [provas]);
 
   return (
     <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
@@ -91,10 +91,10 @@ export function PerformanceChart({ competitions }: PerformanceChartProps) {
           content={<ChartTooltipContent indicator="dot" />}
         />
         <ChartLegend content={<ChartLegendContent />} />
-        {events.map((event, index) => (
+        {provas.map((prova, index) => (
           <Line
-            key={event}
-            dataKey={event}
+            key={prova}
+            dataKey={prova}
             type="monotone"
             stroke={`hsl(var(--chart-${(index % 5) + 1}))`}
             strokeWidth={2}

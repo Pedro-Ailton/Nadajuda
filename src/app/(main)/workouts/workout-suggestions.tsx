@@ -46,7 +46,7 @@ const formSchema = z.object({
     required_error: 'Por favor, selecione um tipo de atleta.',
   }),
   eventPreference: z.string({
-    required_error: 'Por favor, selecione uma preferência de evento.',
+    required_error: 'Por favor, selecione uma preferência de prova.',
   }),
 });
 
@@ -157,11 +157,11 @@ export function WorkoutSuggestions() {
                 name="eventPreference"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Evento/Estilo Preferido</FormLabel>
+                    <FormLabel>Prova/Estilo Preferido</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione seu evento favorito" />
+                          <SelectValue placeholder="Selecione sua prova favorita" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

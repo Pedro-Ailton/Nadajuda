@@ -56,7 +56,7 @@ export default function CompetitionsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Data</TableHead>
-                <TableHead>Evento</TableHead>
+                <TableHead>Prova</TableHead>
                 <TableHead className="text-right">Tempo</TableHead>
               </TableRow>
             </TableHeader>

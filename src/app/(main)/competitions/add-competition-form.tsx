@@ -25,7 +25,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { Event } from '@/lib/types';
+import type { Event as ProvaType } from '@/lib/types';
 import {
     Command,
     CommandEmpty,
@@ -38,8 +38,7 @@ import { AddEventData } from './add-event-data';
 
 
 const competitionSchema = z.object({
-  eventId: z.string({ required_error: 'Selecione um evento.' }),
-  eventName: z.string(),
+  eventId: z.string({ required_error: 'Selecione uma prova.' }),
   time: z.coerce.number().positive('O tempo deve ser um número positivo.'),
   date: z.date({ required_error: 'A data da competição é obrigatória.' }),
 });
@@ -58,7 +57,7 @@ export function AddCompetitionForm() {
     return query(collection(firestore, 'events'));
   }, [firestore]);
 
-  const { data: events, isLoading: isLoadingEvents } = useCollection<Event>(eventsQuery);
+  const { data: provas, isLoading: isLoadingProvas } = useCollection<ProvaType>(eventsQuery);
 
   const {
     register,
@@ -75,7 +74,7 @@ export function AddCompetitionForm() {
   const selectedEventId = watch('eventId');
 
   const onSubmit = (data: CompetitionFormData) => {
-    if (!user || !firestore) return;
+    if (!user || !firestore || !provas) return;
 
     const competitionTimesCollection = collection(
       firestore,
@@ -84,10 +83,20 @@ export function AddCompetitionForm() {
       'competitionTimes'
     );
     
-    // We don't need to store eventName if we have eventId, but it makes displaying easier for now.
-    // In a more complex app, you'd fetch the event details using the eventId.
+    const selectedProva = provas.find(p => p.id === data.eventId);
+
+    if (!selectedProva) {
+        toast({
+            variant: 'destructive',
+            title: 'Erro',
+            description: 'Prova selecionada não encontrada.',
+        });
+        return;
+    }
+    
     const submissionData = {
         ...data,
+        eventName: selectedProva.name, // Correctly set eventName
         date: data.date.toISOString(),
         userProfileId: user.uid,
     };
@@ -99,7 +108,7 @@ export function AddCompetitionForm() {
       description: 'Sua competição foi registrada.',
     });
 
-    reset({ eventId: undefined, eventName: undefined, time: undefined, date: undefined });
+    reset({ eventId: undefined, time: undefined, date: undefined });
     setOpen(false);
   };
 
@@ -119,7 +128,7 @@ export function AddCompetitionForm() {
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Evento</Label>
+            <Label>Prova</Label>
             <Controller
                 name="eventId"
                 control={control}
@@ -131,39 +140,35 @@ export function AddCompetitionForm() {
                         role="combobox"
                         aria-expanded={popoverOpen}
                         className="w-full justify-between font-normal"
-                        disabled={isLoadingEvents}
+                        disabled={isLoadingProvas}
                       >
                         {selectedEventId
-                          ? events?.find((event) => event.id === selectedEventId)?.name
-                          : "Selecione um evento..."}
+                          ? provas?.find((prova) => prova.id === selectedEventId)?.name
+                          : "Selecione uma prova..."}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                       <Command>
-                        <CommandInput placeholder="Procurar evento..." />
-                        <CommandEmpty>Nenhum evento encontrado.</CommandEmpty>
+                        <CommandInput placeholder="Procurar prova..." />
+                        <CommandEmpty>Nenhuma prova encontrada.</CommandEmpty>
                         <CommandGroup>
-                          {events?.map((event) => (
+                          {provas?.map((prova) => (
                             <CommandItem
-                              key={event.id}
-                              value={event.id}
+                              key={prova.id}
+                              value={prova.id}
                               onSelect={(currentValue) => {
-                                const selectedEvent = events?.find(e => e.id === currentValue);
-                                if (selectedEvent) {
-                                  setValue("eventId", currentValue === selectedEventId ? "" : currentValue);
-                                  setValue("eventName", selectedEvent.name);
-                                }
+                                setValue("eventId", currentValue === selectedEventId ? "" : currentValue);
                                 setPopoverOpen(false);
                               }}
                             >
                               <Check
                                 className={cn(
                                   "mr-2 h-4 w-4",
-                                  selectedEventId === event.id ? "opacity-100" : "opacity-0"
+                                  selectedEventId === prova.id ? "opacity-100" : "opacity-0"
                                 )}
                               />
-                              {event.name}
+                              {prova.name}
                             </CommandItem>
                           ))}
                         </CommandGroup>
