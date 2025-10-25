@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -42,18 +42,20 @@ export function AddCompetitionForm() {
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  const {
-    handleSubmit,
-    control,
-    reset,
-    formState: { errors },
-  } = useForm<CompetitionFormData>({
+  const formMethods = useForm<CompetitionFormData>({
     resolver: zodResolver(competitionSchema),
     defaultValues: {
       time: undefined,
       date: undefined,
     }
   });
+
+  const {
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = formMethods;
 
   const onSubmit = (data: CompetitionFormData) => {
     if (!user || !firestore) return;
@@ -96,76 +98,78 @@ export function AddCompetitionForm() {
         <DialogHeader>
           <DialogTitle>Registrar Nova Competição</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>Prova</Label>
-            <ProvaSelect control={control} />
-             {errors.eventId && (
-              <p className="text-sm text-destructive">{errors.eventId.message}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="time">Tempo (em segundos)</Label>
-            <Controller
-              name="time"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  id="time"
-                  type="number"
-                  step="0.01"
-                  placeholder="Ex: 58.43"
-                  {...field}
-                />
+        <FormProvider {...formMethods}>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Prova</Label>
+              <ProvaSelect control={control} />
+              {errors.eventId && (
+                <p className="text-sm text-destructive">{errors.eventId.message}</p>
               )}
-            />
-            {errors.time && (
-              <p className="text-sm text-destructive">{errors.time.message}</p>
-            )}
-          </div>
-           <div className="space-y-2">
-            <Label htmlFor="date">Data da Competição</Label>
-             <Controller
-                name="date"
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="time">Tempo (em segundos)</Label>
+              <Controller
+                name="time"
                 control={control}
                 render={({ field }) => (
-                <Popover>
-                    <PopoverTrigger asChild>
-                    <Button
-                        id="date"
-                        variant={"outline"}
-                        className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                        )}
-                    >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? format(field.value, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
-                    </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                    <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                        locale={ptBR}
-                    />
-                    </PopoverContent>
-                </Popover>
+                  <Input
+                    id="time"
+                    type="number"
+                    step="0.01"
+                    placeholder="Ex: 58.43"
+                    {...field}
+                  />
                 )}
-            />
-            {errors.date && (
-              <p className="text-sm text-destructive">{errors.date.message}</p>
-            )}
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="ghost">Cancelar</Button>
-            </DialogClose>
-            <Button type="submit">Salvar</Button>
-          </DialogFooter>
-        </form>
+              />
+              {errors.time && (
+                <p className="text-sm text-destructive">{errors.time.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="date">Data da Competição</Label>
+              <Controller
+                  name="date"
+                  control={control}
+                  render={({ field }) => (
+                  <Popover>
+                      <PopoverTrigger asChild>
+                      <Button
+                          id="date"
+                          variant={"outline"}
+                          className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                          )}
+                      >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {field.value ? format(field.value, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
+                      </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                      <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                          locale={ptBR}
+                      />
+                      </PopoverContent>
+                  </Popover>
+                  )}
+              />
+              {errors.date && (
+                <p className="text-sm text-destructive">{errors.date.message}</p>
+              )}
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="ghost">Cancelar</Button>
+              </DialogClose>
+              <Button type="submit">Salvar</Button>
+            </DialogFooter>
+          </form>
+        </FormProvider>
       </DialogContent>
     </Dialog>
   );
