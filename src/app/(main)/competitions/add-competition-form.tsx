@@ -34,6 +34,7 @@ import {
     CommandItem,
   } from "@/components/ui/command"
 import { Check } from 'lucide-react';
+import { AddEventData } from './add-event-data';
 
 
 const competitionSchema = z.object({
@@ -103,6 +104,8 @@ export function AddCompetitionForm() {
   };
 
   return (
+    <>
+    <AddEventData />
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
@@ -146,8 +149,11 @@ export function AddCompetitionForm() {
                               key={event.id}
                               value={event.id}
                               onSelect={(currentValue) => {
-                                setValue("eventId", currentValue === selectedEventId ? "" : currentValue);
-                                setValue("eventName", event.name);
+                                const selectedEvent = events?.find(e => e.id === currentValue);
+                                if (selectedEvent) {
+                                  setValue("eventId", currentValue === selectedEventId ? "" : currentValue);
+                                  setValue("eventName", selectedEvent.name);
+                                }
                                 setPopoverOpen(false);
                               }}
                             >
@@ -222,5 +228,6 @@ export function AddCompetitionForm() {
         </form>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
