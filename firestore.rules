@@ -6,134 +6,172 @@
  * Events are considered public and accessible to all users.
  *
  * Data Structure:
- * - /users/{userId}: Stores user profiles.
+ * - /users/{userId}: Stores user profiles. 'userId' must match the Firebase Auth UID.
  * - /users/{userProfileId}/competitionTimes/{competitionTimeId}: Stores competition times for each user.
  * - /users/{userProfileId}/workouts/{workoutId}: Stores workouts created by each user.
  * - /users/{userProfileId}/workouts/{workoutId}/workoutItems/{workoutItemId}: Stores workout items for each workout.
- * - /events/{eventId}: Stores events, which are considered public.
+ * - /events/{eventId}: Stores global event data, accessible to all users.
  *
  * Key Security Decisions:
  * - User listing is disallowed.
- * - All writes under /users/{userId} are restricted to the user identified by {userId}.
  * - Events are publicly readable.
+ * - All write operations are protected by authorization checks.
  *
  * Denormalization for Authorization:
- * The 'userProfileId' is denormalized in all subcollections (competitionTimes, workouts, workoutItems) to avoid costly `get()` calls and enforce ownership directly within the subcollection documents.
+ * - The 'userProfileId' is denormalized into the CompetitionTime, Workout, and WorkoutItem entities to allow for simple owner-based authorization rules without requiring additional `get()` calls.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Secure user profiles. Only the owner can read/write their own profile.
+     * @description Manages user profiles. Only the authenticated user can read and write their own profile.
      * @path /users/{userId}
-     * @allow (create) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' can create a profile with id 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13'.
-     * @allow (get) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' can read their own profile.
-     * @allow (update) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' can update their own profile.
-     * @allow (delete) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' can delete their own profile.
-     * @deny (create) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' cannot create a profile with id 'someoneElseId'.
-     * @deny (get) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' cannot read profile 'someoneElseId'.
-     * @deny (update) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' cannot update profile 'someoneElseId'.
-     * @deny (delete) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' cannot delete profile 'someoneElseId'.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User with UID 'user123' creates their profile document.
+     *   - Request: { "auth": { "uid": "user123" }, "resource": { "data": { "id": "user123", "name": "Test User", "email": "test@example.com" } } }
+     * @allow (get) User with UID 'user123' reads their own profile document.
+     *   - Request: { "auth": { "uid": "user123" } }
+     * @allow (update) User with UID 'user123' updates their own profile document.
+     *   - Request: { "auth": { "uid": "user123" }, "resource": { "data": { "id": "user123", "name": "Updated Name", "email": "test@example.com" } } }
+     * @allow (delete) User with UID 'user123' deletes their own profile document.
+     *   - Request: { "auth": { "uid": "user123" } }
+     * @deny (create) User with UID 'user456' attempts to create a profile for 'user123'.
+     *   - Request: { "auth": { "uid": "user456" }, "resource": { "data": { "id": "user123", "name": "Test User", "email": "test@example.com" } } }
+     * @deny (get) User with UID 'user456' attempts to read profile of 'user123'.
+     *   - Request: { "auth": { "uid": "user456" } }
+     * @deny (update) User with UID 'user456' attempts to update profile of 'user123'.
+     *   - Request: { "auth": { "uid": "user456" }, "resource": { "data": { "id": "user123", "name": "Updated Name", "email": "test@example.com" } } }
+     * @deny (delete) User with UID 'user456' attempts to delete profile of 'user123'.
+     *   - Request: { "auth": { "uid": "user456" } }
+     * @principle Enforces document ownership for all read and write operations on user profiles.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false;
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+      // Verified Identity
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false; // User listing is explicitly disallowed.
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isSignedIn() && isExistingOwner(userId);
     }
 
     /**
-     * @description Secure competition times. Only the owner can read/write their own competition times.
+     * @description Manages competition times for each user. Only the owning user can read and write their competition times.
      * @path /users/{userProfileId}/competitionTimes/{competitionTimeId}
-     * @allow (create) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' can create a competition time under their profile.
-     * @allow (get) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' can read a competition time under their profile.
-     * @allow (update) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' can update a competition time under their profile.
-     * @allow (delete) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' can delete a competition time under their profile.
-     * @deny (create) User 'someoneElseId' cannot create a competition time under user 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' profile.
-     * @deny (get) User 'someoneElseId' cannot read a competition time under user 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' profile.
-     * @deny (update) User 'someoneElseId' cannot update a competition time under user 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' profile.
-     * @deny (delete) User 'someoneElseId' cannot delete a competition time under user 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' profile.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User with UID 'user123' creates a new competition time.
+     *   - Request: { "auth": { "uid": "user123" }, "resource": { "data": { "id": "time1", "userProfileId": "user123", "eventId": "event1", "time": 60.0, "date": "2024-01-01T00:00:00Z" } } }
+     * @allow (get) User with UID 'user123' reads their own competition time.
+     *   - Request: { "auth": { "uid": "user123" } }
+     * @allow (update) User with UID 'user123' updates their own competition time.
+     *   - Request: { "auth": { "uid": "user123" }, "resource": { "data": { "id": "time1", "userProfileId": "user123", "eventId": "event1", "time": 61.0, "date": "2024-01-01T00:00:00Z" } } }
+     * @allow (delete) User with UID 'user123' deletes their own competition time.
+     *   - Request: { "auth": { "uid": "user123" } }
+     * @deny (create) User with UID 'user456' attempts to create a competition time for 'user123'.
+     *   - Request: { "auth": { "uid": "user456" }, "resource": { "data": { "id": "time1", "userProfileId": "user123", "eventId": "event1", "time": 60.0, "date": "2024-01-01T00:00:00Z" } } }
+     * @deny (get) User with UID 'user456' attempts to read competition time of 'user123'.
+     *   - Request: { "auth": { "uid": "user456" } }
+     * @deny (update) User with UID 'user456' attempts to update competition time of 'user123'.
+     *   - Request: { "auth": { "uid": "user456" }, "resource": { "data": { "id": "time1", "userProfileId": "user123", "eventId": "event1", "time": 61.0, "date": "2024-01-01T00:00:00Z" } } }
+     * @deny (delete) User with UID 'user456' attempts to delete competition time of 'user123'.
+     *   - Request: { "auth": { "uid": "user456" } }
+     * @principle Enforces document ownership for writes, restricts access to a user's own data tree.
      */
     match /users/{userProfileId}/competitionTimes/{competitionTimeId} {
-      allow get: if isOwner(userProfileId);
-      allow list: if isOwner(userProfileId);
-      allow create: if isOwner(userProfileId) && request.resource.data.userProfileId == userProfileId;
-      allow update: if isExistingOwner(userProfileId) && request.resource.data.userProfileId == resource.data.userProfileId;
-      allow delete: if isExistingOwner(userProfileId);
+      allow get: if isSignedIn() && isOwner(userProfileId);
+      allow list: if isSignedIn() && isOwner(userProfileId);
+      allow create: if isSignedIn() && isOwner(userProfileId) && request.resource.data.userProfileId == userProfileId;
+      allow update: if isSignedIn() && isExistingOwner(userProfileId) && request.resource.data.userProfileId == resource.data.userProfileId;
+      allow delete: if isSignedIn() && isExistingOwner(userProfileId);
     }
 
     /**
-     * @description Secure workouts. Only the owner can read/write their own workouts.
+     * @description Manages workouts created by each user. Only the owning user can read and write their workouts.
      * @path /users/{userProfileId}/workouts/{workoutId}
-     * @allow (create) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' can create a workout under their profile.
-     * @allow (get) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' can read a workout under their profile.
-     * @allow (update) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' can update a workout under their profile.
-     * @allow (delete) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' can delete a workout under their profile.
-     * @deny (create) User 'someoneElseId' cannot create a workout under user 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' profile.
-     * @deny (get) User 'someoneElseId' cannot read a workout under user 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' profile.
-     * @deny (update) User 'someoneElseId' cannot update a workout under user 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' profile.
-     * @deny (delete) User 'someoneElseId' cannot delete a workout under user 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' profile.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User with UID 'user123' creates a new workout.
+     *   - Request: { "auth": { "uid": "user123" }, "resource": { "data": { "id": "workout1", "userProfileId": "user123", "name": "Easy Run", "description": "Easy 30 minute run", "date": "2024-01-01T00:00:00Z", "workoutItems": [] } } }
+     * @allow (get) User with UID 'user123' reads their own workout.
+     *   - Request: { "auth": { "uid": "user123" } }
+     * @allow (update) User with UID 'user123' updates their own workout.
+     *   - Request: { "auth": { "uid": "user123" }, "resource": { "data": { "id": "workout1", "userProfileId": "user123", "name": "Easy Run", "description": "Easy 40 minute run", "date": "2024-01-01T00:00:00Z", "workoutItems": [] } } }
+     * @allow (delete) User with UID 'user123' deletes their own workout.
+     *   - Request: { "auth": { "uid": "user123" } }
+     * @deny (create) User with UID 'user456' attempts to create a workout for 'user123'.
+     *   - Request: { "auth": { "uid": "user456" }, "resource": { "data": { "id": "workout1", "userProfileId": "user123", "name": "Easy Run", "description": "Easy 30 minute run", "date": "2024-01-01T00:00:00Z", "workoutItems": [] } } }
+     * @deny (get) User with UID 'user456' attempts to read workout of 'user123'.
+     *   - Request: { "auth": { "uid": "user456" } }
+     * @deny (update) User with UID 'user456' attempts to update workout of 'user123'.
+     *   - Request: { "auth": { "uid": "user456" }, "resource": { "data": { "id": "workout1", "userProfileId": "user123", "name": "Easy Run", "description": "Easy 40 minute run", "date": "2024-01-01T00:00:00Z", "workoutItems": [] } } }
+     * @deny (delete) User with UID 'user456' attempts to delete workout of 'user123'.
+     *   - Request: { "auth": { "uid": "user456" } }
+     * @principle Enforces document ownership for writes, restricts access to a user's own data tree.
      */
     match /users/{userProfileId}/workouts/{workoutId} {
-      allow get: if isOwner(userProfileId);
-      allow list: if isOwner(userProfileId);
-      allow create: if isOwner(userProfileId) && request.resource.data.userProfileId == userProfileId;
-      allow update: if isExistingOwner(userProfileId) && request.resource.data.userProfileId == resource.data.userProfileId;
-      allow delete: if isExistingOwner(userProfileId);
+      allow get: if isSignedIn() && isOwner(userProfileId);
+      allow list: if isSignedIn() && isOwner(userProfileId);
+      allow create: if isSignedIn() && isOwner(userProfileId) && request.resource.data.userProfileId == userProfileId;
+      allow update: if isSignedIn() && isExistingOwner(userProfileId) && request.resource.data.userProfileId == resource.data.userProfileId;
+      allow delete: if isSignedIn() && isExistingOwner(userProfileId);
     }
 
     /**
-     * @description Secure workout items. Only the owner can read/write their own workout items.
+     * @description Manages workout items for each workout. Only the owning user can read and write their workout items.
      * @path /users/{userProfileId}/workouts/{workoutId}/workoutItems/{workoutItemId}
-     * @allow (create) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' can create a workout item under their workout.
-     * @allow (get) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' can read a workout item under their workout.
-     * @allow (update) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' can update a workout item under their workout.
-     * @allow (delete) User 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' can delete a workout item under their workout.
-     * @deny (create) User 'someoneElseId' cannot create a workout item under user 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' workout.
-     * @deny (get) User 'someoneElseId' cannot read a workout item under user 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' workout.
-     * @deny (update) User 'someoneElseId' cannot update a workout item under user 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' workout.
-     * @deny (delete) User 'someoneElseId' cannot delete a workout item under user 'IFdZ3HDwveaM3k9Ky8LZMgtIuC13' workout.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User with UID 'user123' creates a new workout item.
+     *   - Request: { "auth": { "uid": "user123" }, "resource": { "data": { "id": "item1", "workoutId": "workout1", "description": "Warmup", "estimatedTime": 300 } } }
+     * @allow (get) User with UID 'user123' reads their own workout item.
+     *   - Request: { "auth": { "uid": "user123" } }
+     * @allow (update) User with UID 'user123' updates their own workout item.
+     *   - Request: { "auth": { "uid": "user123" }, "resource": { "data": { "id": "item1", "workoutId": "workout1", "description": "Warmup", "estimatedTime": 360 } } }
+     * @allow (delete) User with UID 'user123' deletes their own workout item.
+     *   - Request: { "auth": { "uid": "user123" } }
+     * @deny (create) User with UID 'user456' attempts to create a workout item for 'user123'.
+     *   - Request: { "auth": { "uid": "user456" }, "resource": { "data": { "id": "item1", "workoutId": "workout1", "description": "Warmup", "estimatedTime": 300 } } }
+     * @deny (get) User with UID 'user456' attempts to read workout item of 'user123'.
+     *   - Request: { "auth": { "uid": "user456" } }
+     * @deny (update) User with UID 'user456' attempts to update workout item of 'user123'.
+     *   - Request: { "auth": { "uid": "user456" }, "resource": { "data": { "id": "item1", "workoutId": "workout1", "description": "Warmup", "estimatedTime": 360 } } }
+     * @deny (delete) User with UID 'user456' attempts to delete workout item of 'user123'.
+     *   - Request: { "auth": { "uid": "user456" } }
+     * @principle Enforces document ownership for writes, restricts access to a user's own data tree.
      */
     match /users/{userProfileId}/workouts/{workoutId}/workoutItems/{workoutItemId} {
-      allow get: if isOwner(userProfileId);
-      allow list: if isOwner(userProfileId);
-      allow create: if isOwner(userProfileId);
-      allow update: if isExistingOwner(userProfileId);
-      allow delete: if isExistingOwner(userProfileId);
+      allow get: if isSignedIn() && isOwner(userProfileId);
+      allow list: if isSignedIn() && isOwner(userProfileId);
+      allow create: if isSignedIn() && isOwner(userProfileId) && get(/databases/$(database)/documents/workouts/$(workoutId)).data.userProfileId == userProfileId;
+      allow update: if isSignedIn() && isExistingOwner(userProfileId) && get(/databases/$(database)/documents/workouts/$(workoutId)).data.userProfileId == userProfileId;
+      allow delete: if isSignedIn() && isExistingOwner(userProfileId);
     }
 
     /**
-     * @description Allow public read access to events.
+     * @description Manages events. Events are global and accessible to all users.
      * @path /events/{eventId}
-     * @allow (get) Any user can read events.
+     * @allow (get) Any user can read any event.
+     *   - Request: { "auth": { "uid": "user123" } }
      * @allow (list) Any user can list events.
-     * @principle Events are considered public data.
+     *   - Request: { "auth": { "uid": "user123" } }
+     * @deny (create) No one can create new events.
+     *   - Request: { "auth": { "uid": "user123" }, "resource": { "data": { "id": "event1", "name": "100m Freestyle", "distance": 100, "stroke": "Freestyle" } } }
+     * @deny (update) No one can update events.
+     *   - Request: { "auth": { "uid": "user123" }, "resource": { "data": { "id": "event1", "name": "100m Freestyle", "distance": 100, "stroke": "Freestyle" } } }
+     * @deny (delete) No one can delete events.
+     *   - Request: { "auth": { "uid": "user123" } }
+     * @principle Events are publicly readable but not writable.
      */
     match /events/{eventId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow get, list: if true;
+      allow create, update, delete: if false;
     }
   }
 
-  // Helper functions
+  // Helper Functions
   function isSignedIn() {
     return request.auth != null;
   }
 
   function isOwner(userId) {
-    return isSignedIn() && request.auth.uid == userId;
+    return request.auth.uid == userId;
   }
 
   function isExistingOwner(userId) {
-    return isOwner(userId) && resource != null;
+    return isSignedIn() && isOwner(userId) && resource != null;
   }
 }
