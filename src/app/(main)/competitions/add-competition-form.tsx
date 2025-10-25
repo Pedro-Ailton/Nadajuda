@@ -129,7 +129,7 @@ export function AddCompetitionForm() {
                 render={({ field }) => (
                   <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoadingProvas}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma prova..." />
+                      <SelectValue placeholder={isLoadingProvas ? "Carregando provas..." : "Selecione uma prova..."} />
                     </SelectTrigger>
                     <SelectContent>
                       {provas?.map((prova) => (
