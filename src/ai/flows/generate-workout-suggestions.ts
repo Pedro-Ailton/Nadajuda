@@ -9,6 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const GenerateWorkoutSuggestionsInputSchema = z.object({
@@ -40,6 +41,7 @@ const prompt = ai.definePrompt({
   name: 'generateWorkoutSuggestionsPrompt',
   input: {schema: GenerateWorkoutSuggestionsInputSchema},
   output: {schema: GenerateWorkoutSuggestionsOutputSchema},
+  model: googleAI.model('gemini-pro'),
   prompt: `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance, goals and preferences.
 
   Your response should be a structured workout plan, including warm-up, main set, and cool-down sections.
