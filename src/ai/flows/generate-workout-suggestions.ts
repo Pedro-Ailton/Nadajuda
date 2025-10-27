@@ -47,7 +47,7 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
   async input => {
     const { pastPerformance, goals, athleteType, eventPreference } = input;
 
-    const { text } = await ai.generate({
+    const response = await ai.generate({
       model: googleAI.model('gemini-pro'),
       prompt: `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance, goals and preferences.
 
@@ -75,11 +75,9 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
       - 200m easy pull
       - 100m backstroke
       `,
-      output: {
-        format: 'text'
-      }
     });
 
-    return { workoutSuggestions: text };
+    return { workoutSuggestions: response.text };
   }
 );
+
