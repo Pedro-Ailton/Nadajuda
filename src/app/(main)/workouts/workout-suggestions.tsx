@@ -27,13 +27,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { generateWorkoutSuggestionsAction } from '@/lib/actions';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-  } from "@/components/ui/select"
 
 const formSchema = z.object({
   pastPerformance: z.string().min(10, {
@@ -41,12 +34,6 @@ const formSchema = z.object({
   }),
   goals: z.string().min(10, {
     message: 'Por favor, descreva seus objetivos.',
-  }),
-  athleteType: z.string({
-    required_error: 'Por favor, selecione um tipo de atleta.',
-  }),
-  eventPreference: z.string({
-    required_error: 'Por favor, selecione uma preferência de prova.',
   }),
 });
 
@@ -125,53 +112,6 @@ export function WorkoutSuggestions() {
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="athleteType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Atleta</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione sua principal força" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="sprinter">Velocista (50m-100m)</SelectItem>
-                        <SelectItem value="mid-distance">Meio-Fundo (200m-400m)</SelectItem>
-                        <SelectItem value="distance">Fundo (800m+)</SelectItem>
-                        <SelectItem value="all-rounder">Completo (Medley)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="eventPreference"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Prova/Estilo Preferido</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione sua prova favorita" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="freestyle">Livre</SelectItem>
-                        <SelectItem value="backstroke">Costas</SelectItem>
-                        <SelectItem value="breaststroke">Peito</SelectItem>
-                        <SelectItem value="butterfly">Borboleta</SelectItem>
-                        <SelectItem value="individual-medley">Medley Individual</SelectItem>
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

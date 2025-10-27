@@ -16,8 +16,6 @@ const GenerateWorkoutSuggestionsInputSchema = z.object({
   pastPerformance:
     z.string().describe("A summary of the athlete's past performance data."),
   goals: z.string().describe("The athlete's training goals."),
-  athleteType: z.string().describe('The type of athlete.'),
-  eventPreference: z.string().describe('The athletes preferred event.'),
 });
 export type GenerateWorkoutSuggestionsInput = z.infer<
   typeof GenerateWorkoutSuggestionsInputSchema
@@ -42,11 +40,11 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
     outputSchema: GenerateWorkoutSuggestionsOutputSchema,
   },
   async input => {
-    const { pastPerformance, goals, athleteType, eventPreference } = input;
+    const { pastPerformance, goals } = input;
 
     const response = await ai.generate({
       model: 'gemini-pro',
-      prompt: `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance, goals and preferences.
+      prompt: `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance and goals.
 
       Your response should be a structured workout plan, including warm-up, main set, and cool-down sections.
       For each part of the workout, provide specific distances, strokes, and target times or effort levels.
@@ -55,8 +53,6 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
     
       Past Performance: ${pastPerformance}
       Goals: ${goals}
-      Type of Athlete: ${athleteType}
-      Preferred Event: ${eventPreference}
     
       Provide detailed and specific workout suggestions that will help the athlete achieve their goals. Consider available training time and create an actionable plan. Your response must be only the workout plan text, without any introductory phrases like "Here is a workout suggestion". For example:
     
