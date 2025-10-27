@@ -10,7 +10,6 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const GenerateWorkoutSuggestionsInputSchema = z.object({
@@ -24,10 +23,8 @@ export type GenerateWorkoutSuggestionsInput = z.infer<
   typeof GenerateWorkoutSuggestionsInputSchema
 >;
 
-const GenerateWorkoutSuggestionsOutputSchema = z.object({
-  workoutSuggestions:
-    z.string().describe('Workout suggestions tailored to the athlete\'s data.'),
-});
+const GenerateWorkoutSuggestionsOutputSchema = z.string().describe('Workout suggestions tailored to the athlete\'s data.');
+
 export type GenerateWorkoutSuggestionsOutput = z.infer<
   typeof GenerateWorkoutSuggestionsOutputSchema
 >;
@@ -48,7 +45,7 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
     const { pastPerformance, goals, athleteType, eventPreference } = input;
 
     const response = await ai.generate({
-      model: googleAI.model('gemini-pro'),
+      model: 'gemini-pro',
       prompt: `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance, goals and preferences.
 
       Your response should be a structured workout plan, including warm-up, main set, and cool-down sections.
@@ -61,7 +58,7 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
       Type of Athlete: ${athleteType}
       Preferred Event: ${eventPreference}
     
-      Provide detailed and specific workout suggestions that will help the athlete achieve their goals. Consider available training time and create an actionable plan. For example:
+      Provide detailed and specific workout suggestions that will help the athlete achieve their goals. Consider available training time and create an actionable plan. Your response must be only the workout plan text, without any introductory phrases like "Here is a workout suggestion". For example:
     
       Warm-up:
       - 400m easy swim (mix strokes)
@@ -77,7 +74,6 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
       `,
     });
 
-    return { workoutSuggestions: response.text };
+    return response.text;
   }
 );
-
