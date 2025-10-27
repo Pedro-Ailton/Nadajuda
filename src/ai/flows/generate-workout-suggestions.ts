@@ -11,6 +11,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 
 const GenerateWorkoutSuggestionsInputSchema = z.object({
   pastPerformance:
@@ -73,7 +74,7 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
     console.log('[AI FLOW] Enviando prompt para o modelo gemini-pro...');
 
     const response = await ai.generate({
-      model: 'gemini-pro',
+      model: googleAI.model('gemini-pro'),
       prompt: prompt,
     });
     
