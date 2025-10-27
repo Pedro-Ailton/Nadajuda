@@ -47,6 +47,8 @@ const provas = [
     { value: '100-Livre', label: '100m Livre', distance: 100, stroke: 'Livre' },
     { value: '200-Livre', label: '200m Livre', distance: 200, stroke: 'Livre' },
     { value: '400-Livre', label: '400m Livre', distance: 400, stroke: 'Livre' },
+    { value: '800-Livre', label: '800m Livre', distance: 800, stroke: 'Livre' },
+    { value: '1500-Livre', label: '1500m Livre', distance: 1500, stroke: 'Livre' },
     { value: '50-Costas', label: '50m Costas', distance: 50, stroke: 'Costas' },
     { value: '100-Costas', label: '100m Costas', distance: 100, stroke: 'Costas' },
     { value: '200-Costas', label: '200m Costas', distance: 200, stroke: 'Costas' },
