@@ -11,6 +11,7 @@ export async function generateWorkoutSuggestionsAction(
 ) {
   try {
     const suggestionText = await generateWorkoutSuggestions(input);
+    // suggestionText is the string returned directly from the flow
     return { success: true, data: { workoutSuggestions: suggestionText } };
   } catch (error) {
     console.error(error);
