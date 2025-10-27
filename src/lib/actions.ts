@@ -4,16 +4,29 @@
 import {
   generateWorkoutSuggestions,
   type GenerateWorkoutSuggestionsInput,
+  type GenerateWorkoutSuggestionsOutput,
 } from '@/ai/flows/generate-workout-suggestions';
 
 export async function generateWorkoutSuggestionsAction(
   input: GenerateWorkoutSuggestionsInput
-) {
+): Promise<{ success: boolean; data?: GenerateWorkoutSuggestionsOutput; error?: string }> {
+  console.log('[ACTION] Iniciando a geração de sugestões. Input recebido:', input);
+
   try {
-    const suggestionText = await generateWorkoutSuggestions(input);
-    return { success: true, data: { workoutSuggestions: suggestionText.workoutSuggestions } };
+    const suggestionResult = await generateWorkoutSuggestions(input);
+    
+    console.log('[ACTION] Resposta recebida do flow:', JSON.stringify(suggestionResult, null, 2));
+
+    if (!suggestionResult || !suggestionResult.workoutSuggestions) {
+        console.error('[ACTION] Erro: O flow de IA retornou uma resposta vazia ou malformada.');
+        return { success: false, error: 'A IA retornou uma resposta vazia.' };
+    }
+
+    console.log('[ACTION] Sucesso! Enviando dados para o frontend.');
+    return { success: true, data: suggestionResult };
+    
   } catch (error) {
-    console.error(error);
-    return { success: false, error: 'Falha ao gerar sugestões de treino.' };
+    console.error('[ACTION] Ocorreu um erro catastrófico ao chamar o flow de IA:', error);
+    return { success: false, error: 'Falha ao gerar sugestões de treino. Verifique os logs do servidor.' };
   }
 }

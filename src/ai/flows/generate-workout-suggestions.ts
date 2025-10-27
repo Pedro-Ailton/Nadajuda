@@ -42,11 +42,10 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
     outputSchema: GenerateWorkoutSuggestionsOutputSchema,
   },
   async input => {
+    console.log('[AI FLOW] Flow iniciado com o input:', input);
     const { pastPerformance, goals } = input;
 
-    const response = await ai.generate({
-      model: 'gemini-pro',
-      prompt: `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance and goals.
+    const prompt = `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance and goals.
 
       Your response should be a structured workout plan, including warm-up, main set, and cool-down sections.
       For each part of the workout, provide specific distances, strokes, and target times or effort levels.
@@ -69,9 +68,25 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
       Cool-down:
       - 200m easy pull
       - 100m backstroke
-      `,
-    });
+      `;
+    
+    console.log('[AI FLOW] Enviando prompt para o modelo gemini-pro...');
 
-    return { workoutSuggestions: response.text };
+    const response = await ai.generate({
+      model: 'gemini-pro',
+      prompt: prompt,
+    });
+    
+    console.log('[AI FLOW] Resposta BRUTA da API recebida:', JSON.stringify(response, null, 2));
+
+    const suggestionText = response.text;
+    console.log('[AI FLOW] Texto extraído da resposta:', suggestionText);
+
+    if (!suggestionText) {
+      console.error('[AI FLOW] Erro: O texto da resposta da IA está vazio.');
+      throw new Error('Failed to generate suggestion text from AI.');
+    }
+
+    return { workoutSuggestions: suggestionText };
   }
 );
