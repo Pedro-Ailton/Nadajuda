@@ -27,6 +27,7 @@ export async function generateWorkoutSuggestionsAction(
     
   } catch (error) {
     console.error('[ACTION] Ocorreu um erro catastrófico ao chamar o flow de IA:', error);
-    return { success: false, error: 'Falha ao gerar sugestões de treino. Verifique os logs do servidor.' };
+    const errorMessage = error instanceof Error ? error.message : 'Falha ao gerar sugestões de treino. Verifique os logs do servidor.';
+    return { success: false, error: errorMessage };
   }
 }
