@@ -11,7 +11,7 @@ export async function generateWorkoutSuggestionsAction(
 ) {
   try {
     const suggestionText = await generateWorkoutSuggestions(input);
-    return { success: true, data: { workoutSuggestions: suggestionText } };
+    return { success: true, data: { workoutSuggestions: suggestionText.workoutSuggestions } };
   } catch (error) {
     console.error(error);
     return { success: false, error: 'Falha ao gerar sugestões de treino.' };

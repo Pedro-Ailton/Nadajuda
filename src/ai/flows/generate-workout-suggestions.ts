@@ -21,7 +21,9 @@ export type GenerateWorkoutSuggestionsInput = z.infer<
   typeof GenerateWorkoutSuggestionsInputSchema
 >;
 
-const GenerateWorkoutSuggestionsOutputSchema = z.string().describe('Workout suggestions tailored to the athlete\'s data.');
+const GenerateWorkoutSuggestionsOutputSchema = z.object({
+  workoutSuggestions: z.string().describe('Workout suggestions tailored to the athlete\'s data.'),
+});
 
 export type GenerateWorkoutSuggestionsOutput = z.infer<
   typeof GenerateWorkoutSuggestionsOutputSchema
@@ -70,6 +72,6 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
       `,
     });
 
-    return response.text;
+    return { workoutSuggestions: response.text };
   }
 );
