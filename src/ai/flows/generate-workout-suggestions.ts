@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -14,8 +15,8 @@ import {z} from 'genkit';
 
 const GenerateWorkoutSuggestionsInputSchema = z.object({
   pastPerformance:
-    z.string().describe('A summary of the athlete\'s past performance data.'),
-  goals: z.string().describe('The athlete\'s training goals.'),
+    z.string().describe("A summary of the athlete's past performance data."),
+  goals: z.string().describe("The athlete's training goals."),
   athleteType: z.string().describe('The type of athlete.'),
   eventPreference: z.string().describe('The athletes preferred event.'),
 });
@@ -37,39 +38,6 @@ export async function generateWorkoutSuggestions(
   return generateWorkoutSuggestionsFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'generateWorkoutSuggestionsPrompt',
-  input: {schema: GenerateWorkoutSuggestionsInputSchema},
-  output: {schema: GenerateWorkoutSuggestionsOutputSchema},
-  model: googleAI.model('gemini-pro'),
-  prompt: `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance, goals and preferences.
-
-  Your response should be a structured workout plan, including warm-up, main set, and cool-down sections.
-  For each part of the workout, provide specific distances, strokes, and target times or effort levels.
-
-  Consider the following information about the athlete when generating workout suggestions:
-
-  Past Performance: {{{pastPerformance}}}
-  Goals: {{{goals}}}
-  Type of Athlete: {{{athleteType}}}
-  Preferred Event: {{{eventPreference}}}
-
-  Provide detailed and specific workout suggestions that will help the athlete achieve their goals. Consider available training time and create an actionable plan. For example:
-
-  Warm-up:
-  - 400m easy swim (mix strokes)
-  - 4x50m kick on 1:00
-  - 4x50m drill on 1:00
-
-  Main Set:
-  - 8x100m freestyle on 1:30 (hold pace for 500m race)
-
-  Cool-down:
-  - 200m easy pull
-  - 100m backstroke
-  `,
-});
-
 const generateWorkoutSuggestionsFlow = ai.defineFlow(
   {
     name: 'generateWorkoutSuggestionsFlow',
@@ -77,7 +45,41 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
     outputSchema: GenerateWorkoutSuggestionsOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    const { pastPerformance, goals, athleteType, eventPreference } = input;
+
+    const { text } = await ai.generate({
+      model: googleAI.model('gemini-pro'),
+      prompt: `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance, goals and preferences.
+
+      Your response should be a structured workout plan, including warm-up, main set, and cool-down sections.
+      For each part of the workout, provide specific distances, strokes, and target times or effort levels.
+    
+      Consider the following information about the athlete when generating workout suggestions:
+    
+      Past Performance: ${pastPerformance}
+      Goals: ${goals}
+      Type of Athlete: ${athleteType}
+      Preferred Event: ${eventPreference}
+    
+      Provide detailed and specific workout suggestions that will help the athlete achieve their goals. Consider available training time and create an actionable plan. For example:
+    
+      Warm-up:
+      - 400m easy swim (mix strokes)
+      - 4x50m kick on 1:00
+      - 4x50m drill on 1:00
+    
+      Main Set:
+      - 8x100m freestyle on 1:30 (hold pace for 500m race)
+    
+      Cool-down:
+      - 200m easy pull
+      - 100m backstroke
+      `,
+      output: {
+        format: 'text'
+      }
+    });
+
+    return { workoutSuggestions: text };
   }
 );
