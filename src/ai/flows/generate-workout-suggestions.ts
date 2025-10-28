@@ -10,7 +10,6 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const GenerateWorkoutSuggestionsInputSchema = z.object({
@@ -41,26 +40,22 @@ export async function generateWorkoutSuggestions(
   return result;
 }
 
-
-const generateWorkoutSuggestionsFlow = ai.defineFlow(
-  {
-    name: 'generateWorkoutSuggestionsFlow',
-    inputSchema: GenerateWorkoutSuggestionsInputSchema,
-    outputSchema: GenerateWorkoutSuggestionsOutputSchema,
-  },
-  async (input) => {
-    
-    const prompt = `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance and goals.
+const generateWorkoutSuggestionsPrompt = ai.definePrompt({
+  name: 'generateWorkoutSuggestionsPrompt',
+  input: { schema: GenerateWorkoutSuggestionsInputSchema },
+  output: { schema: GenerateWorkoutSuggestionsOutputSchema },
+  model: 'gemini-1.5-flash-latest',
+  prompt: `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance and goals.
 
 Your response should be a structured workout plan, including warm-up, main set, and cool-down sections.
 For each part of the workout, provide specific distances, strokes, and target times or effort levels.
 
 Consider the following information about the athlete when generating workout suggestions:
 
-Past Performance: ${input.pastPerformance}
-Goals: ${input.goals}
+Past Performance: {{{pastPerformance}}}
+Goals: {{{goals}}}
 
-Provide detailed and specific workout suggestions that will help the athlete achieve their goals. Consider available training time and create an actionable plan. Your response must be only the workout plan text, without any introductory phrases like "Here is a workout suggestion". For example:
+Provide detailed and specific workout suggestions that will help the athlete achieve their goals. Consider available training time and create an actionable plan. Your response must be only the workout plan, formatted as a string. Do not include any introductory phrases like "Here is a workout suggestion". For example:
 
 Warm-up:
 - 400m easy swim (mix strokes)
@@ -73,29 +68,34 @@ Main Set:
 Cool-down:
 - 200m easy pull
 - 100m backstroke
-`;
+`,
+});
+
+
+const generateWorkoutSuggestionsFlow = ai.defineFlow(
+  {
+    name: 'generateWorkoutSuggestionsFlow',
+    inputSchema: GenerateWorkoutSuggestionsInputSchema,
+    outputSchema: GenerateWorkoutSuggestionsOutputSchema,
+  },
+  async (input) => {
     
-    console.log('[AI FLOW] Enviando prompt para o modelo gemini-1.5-flash-latest...');
+    console.log('[AI FLOW] Enviando prompt para o modelo...');
 
     try {
-      const response = await ai.generate({
-        model: googleAI.model('gemini-1.5-flash-latest'),
-        prompt: prompt,
-      });
+      const response = await generateWorkoutSuggestionsPrompt(input);
+      const output = response.output;
 
-      console.log('[AI FLOW] Resposta BRUTA da API recebida:', JSON.stringify(response, null, 2));
+      console.log('[AI FLOW] Resposta da API recebida e processada:', output);
 
-      const suggestionText = response.text;
-      console.log('[AI FLOW] Texto extraído da resposta:', suggestionText);
-
-      if (!suggestionText) {
-        throw new Error('A resposta da IA está vazia.');
+      if (!output || !output.workoutSuggestions) {
+        throw new Error('A resposta da IA está vazia ou malformada.');
       }
       
-      return { workoutSuggestions: suggestionText };
+      return output;
 
     } catch (error) {
-      console.error('[AI FLOW] Erro ao chamar a API de geração:', error);
+      console.error('[AI FLOW] Erro ao chamar o prompt de geração:', error);
       if (error instanceof Error) {
         throw new Error(`Erro na API da IA: ${error.message}`);
       }
