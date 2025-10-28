@@ -7,6 +7,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarInset,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -18,6 +19,16 @@ import { Button } from '@/components/ui/button';
 import { getAuth, signOut } from 'firebase/auth';
 import { LogOut } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
+
+function Header() {
+  return (
+    <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-md md:hidden">
+      <SidebarTrigger />
+      <div className="flex-1" />
+    </header>
+  );
+}
+
 
 export default function MainLayout({
   children,
@@ -80,7 +91,10 @@ export default function MainLayout({
           </div>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset>{children}</SidebarInset>
+      <SidebarInset>
+        <Header />
+        {children}
+      </SidebarInset>
     </SidebarProvider>
   );
 }
