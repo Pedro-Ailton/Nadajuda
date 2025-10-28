@@ -34,17 +34,27 @@ export async function generateWorkoutSuggestions(
 ): Promise<GenerateWorkoutSuggestionsOutput> {
   console.log('[AI FLOW] Iniciando o flow com o input:', input);
   
-  const result = await generateWorkoutSuggestionsFlow(input);
-  
-  console.log('[AI FLOW] Flow concluído com o resultado:', result);
-  return result;
+  try {
+    const result = await generateWorkoutSuggestionsFlow(input);
+    console.log('[AI FLOW] Flow concluído com o resultado:', result);
+    if (!result || !result.workoutSuggestions) {
+      throw new Error('A resposta da IA está vazia ou malformada.');
+    }
+    return result;
+  } catch (error) {
+      console.error('[AI FLOW] Erro ao executar o flow:', error);
+      if (error instanceof Error) {
+          throw new Error(`Erro na API da IA: ${error.message}`);
+      }
+      throw new Error('Ocorreu um erro desconhecido na geração da IA.');
+  }
 }
 
 const generateWorkoutSuggestionsPrompt = ai.definePrompt({
   name: 'generateWorkoutSuggestionsPrompt',
   input: { schema: GenerateWorkoutSuggestionsInputSchema },
   output: { schema: GenerateWorkoutSuggestionsOutputSchema },
-  model: 'gemini-1.5-flash-latest',
+  model: 'gemini-pro',
   prompt: `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance and goals.
 
 Your response should be a structured workout plan, including warm-up, main set, and cool-down sections.
@@ -79,27 +89,17 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
     outputSchema: GenerateWorkoutSuggestionsOutputSchema,
   },
   async (input) => {
-    
     console.log('[AI FLOW] Enviando prompt para o modelo...');
 
-    try {
-      const response = await generateWorkoutSuggestionsPrompt(input);
-      const output = response.output;
+    const response = await generateWorkoutSuggestionsPrompt(input);
+    const output = response.output;
 
-      console.log('[AI FLOW] Resposta da API recebida e processada:', output);
+    console.log('[AI FLOW] Resposta da API recebida:', JSON.stringify(response, null, 2));
 
-      if (!output || !output.workoutSuggestions) {
-        throw new Error('A resposta da IA está vazia ou malformada.');
-      }
-      
-      return output;
-
-    } catch (error) {
-      console.error('[AI FLOW] Erro ao chamar o prompt de geração:', error);
-      if (error instanceof Error) {
-        throw new Error(`Erro na API da IA: ${error.message}`);
-      }
-      throw new Error('Ocorreu um erro desconhecido na geração da IA.');
+    if (!output) {
+      throw new Error('A resposta da IA não contém um output válido.');
     }
+    
+    return output;
   }
 );
