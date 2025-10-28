@@ -11,7 +11,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {googleAI} from '@genkit-ai/google-genai';
 
 const GenerateWorkoutSuggestionsInputSchema = z.object({
   pastPerformance:
@@ -33,25 +32,33 @@ export type GenerateWorkoutSuggestionsOutput = z.infer<
 export async function generateWorkoutSuggestions(
   input: GenerateWorkoutSuggestionsInput
 ): Promise<GenerateWorkoutSuggestionsOutput> {
-  return generateWorkoutSuggestionsFlow(input);
+  console.log('[AI FLOW] Flow iniciado com o input:', input);
+  try {
+    const result = await generateWorkoutSuggestionsFlow(input);
+    console.log('[AI FLOW] Resultado do flow recebido:', result);
+    return result;
+  } catch (error) {
+    console.error('[AI FLOW] Erro ao executar o flow:', error);
+    // Rethrow para que a Server Action possa capturar
+    throw error;
+  }
 }
 
-const generateWorkoutSuggestionsFlow = ai.defineFlow(
+const generateWorkoutSuggestionsPrompt = ai.definePrompt(
   {
-    name: 'generateWorkoutSuggestionsFlow',
-    inputSchema: GenerateWorkoutSuggestionsInputSchema,
-    outputSchema: GenerateWorkoutSuggestionsOutputSchema,
-  },
-  async (input) => {
-    const prompt = `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance and goals.
+    name: 'generateWorkoutSuggestionsPrompt',
+    model: 'gemini-1.0-pro',
+    input: { schema: GenerateWorkoutSuggestionsInputSchema },
+    output: { schema: GenerateWorkoutSuggestionsOutputSchema },
+    prompt: `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance and goals.
 
 Your response should be a structured workout plan, including warm-up, main set, and cool-down sections.
 For each part of the workout, provide specific distances, strokes, and target times or effort levels.
 
 Consider the following information about the athlete when generating workout suggestions:
 
-Past Performance: ${input.pastPerformance}
-Goals: ${input.goals}
+Past Performance: {{{pastPerformance}}}
+Goals: {{{goals}}}
 
 Provide detailed and specific workout suggestions that will help the athlete achieve their goals. Consider available training time and create an actionable plan. Your response must be only the workout plan text, without any introductory phrases like "Here is a workout suggestion". For example:
 
@@ -66,19 +73,27 @@ Main Set:
 Cool-down:
 - 200m easy pull
 - 100m backstroke
-`;
+`,
+  },
+);
 
-    const response = await ai.generate({
-      model: googleAI.model('gemini-1.0-pro'),
-      prompt: prompt,
-    });
-    
-    const suggestionText = response.text;
 
-    if (!suggestionText) {
-      throw new Error('Failed to generate suggestion text from AI.');
+const generateWorkoutSuggestionsFlow = ai.defineFlow(
+  {
+    name: 'generateWorkoutSuggestionsFlow',
+    inputSchema: GenerateWorkoutSuggestionsInputSchema,
+    outputSchema: GenerateWorkoutSuggestionsOutputSchema,
+  },
+  async (input) => {
+    console.log('[AI FLOW] Enviando prompt para o modelo...');
+    const { output } = await generateWorkoutSuggestionsPrompt(input);
+
+    if (!output) {
+      console.error('[AI FLOW] Erro: A resposta da IA está vazia ou malformada.');
+      throw new Error('A resposta da IA está vazia ou malformada.');
     }
-
-    return { workoutSuggestions: suggestionText };
+    
+    console.log('[AI FLOW] Resposta da IA recebida e processada com sucesso.');
+    return output;
   }
 );
