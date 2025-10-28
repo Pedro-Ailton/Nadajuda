@@ -8,6 +8,7 @@ import {
   SidebarFooter,
   SidebarInset,
   SidebarTrigger,
+  SidebarRail,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -22,7 +23,7 @@ import { doc, getDoc } from 'firebase/firestore';
 
 function Header() {
   return (
-    <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-md md:hidden">
+    <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-md">
       <SidebarTrigger />
       <div className="flex-1" />
     </header>
@@ -75,6 +76,7 @@ export default function MainLayout({
   return (
     <SidebarProvider>
       <Sidebar>
+        <SidebarRail />
         <SidebarHeader>
           <Logo />
         </SidebarHeader>
