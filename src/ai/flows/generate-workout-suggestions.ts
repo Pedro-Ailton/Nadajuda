@@ -42,52 +42,43 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
     inputSchema: GenerateWorkoutSuggestionsInputSchema,
     outputSchema: GenerateWorkoutSuggestionsOutputSchema,
   },
-  async input => {
-    console.log('[AI FLOW] Flow iniciado com o input:', input);
-
+  async (input) => {
     const prompt = `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance and goals.
 
-      Your response should be a structured workout plan, including warm-up, main set, and cool-down sections.
-      For each part of the workout, provide specific distances, strokes, and target times or effort levels.
-    
-      Consider the following information about the athlete when generating workout suggestions:
-    
-      Past Performance: ${input.pastPerformance}
-      Goals: ${input.goals}
-    
-      Provide detailed and specific workout suggestions that will help the athlete achieve their goals. Consider available training time and create an actionable plan. Your response must be only the workout plan text, without any introductory phrases like "Here is a workout suggestion". For example:
-    
-      Warm-up:
-      - 400m easy swim (mix strokes)
-      - 4x50m kick on 1:00
-      - 4x50m drill on 1:00
-    
-      Main Set:
-      - 8x100m freestyle on 1:30 (hold pace for 500m race)
-    
-      Cool-down:
-      - 200m easy pull
-      - 100m backstroke
-      `;
+Your response should be a structured workout plan, including warm-up, main set, and cool-down sections.
+For each part of the workout, provide specific distances, strokes, and target times or effort levels.
 
-    console.log('[AI FLOW] Enviando prompt para o modelo gemini-pro...');
+Consider the following information about the athlete when generating workout suggestions:
+
+Past Performance: ${input.pastPerformance}
+Goals: ${input.goals}
+
+Provide detailed and specific workout suggestions that will help the athlete achieve their goals. Consider available training time and create an actionable plan. Your response must be only the workout plan text, without any introductory phrases like "Here is a workout suggestion". For example:
+
+Warm-up:
+- 400m easy swim (mix strokes)
+- 4x50m kick on 1:00
+- 4x50m drill on 1:00
+
+Main Set:
+- 8x100m freestyle on 1:30 (hold pace for 500m race)
+
+Cool-down:
+- 200m easy pull
+- 100m backstroke
+`;
 
     const response = await ai.generate({
-      model: googleAI.model('gemini-pro'),
+      model: googleAI.model('gemini-1.0-pro'),
       prompt: prompt,
     });
     
-    console.log('[AI FLOW] Resposta BRUTA da API recebida:', JSON.stringify(response, null, 2));
-
     const suggestionText = response.text;
-    console.log('[AI FLOW] Texto extraído da resposta:', suggestionText);
 
     if (!suggestionText) {
-      console.error('[AI FLOW] Erro: O texto da resposta da IA está vazio.');
       throw new Error('Failed to generate suggestion text from AI.');
     }
 
     return { workoutSuggestions: suggestionText };
   }
 );
-
