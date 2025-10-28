@@ -10,13 +10,8 @@ import {
 export async function generateWorkoutSuggestionsAction(
   input: GenerateWorkoutSuggestionsInput
 ): Promise<{ success: boolean; data?: GenerateWorkoutSuggestionsOutput; error?: string }> {
-  
-  console.log('[ACTION] Iniciando a geração de sugestões com o input:', input);
-
   try {
     const suggestionResult = await generateWorkoutSuggestions(input);
-    
-    console.log('[ACTION] Resultado recebido do flow:', suggestionResult);
 
     if (!suggestionResult || !suggestionResult.workoutSuggestions) {
       console.error('[ACTION] Erro: A IA retornou uma resposta vazia ou malformada.');
@@ -30,7 +25,6 @@ export async function generateWorkoutSuggestionsAction(
     let errorMessage = 'Falha ao gerar sugestões de treino.';
     
     if (error instanceof Error) {
-      // Retorna a mensagem de erro específica para o frontend.
       errorMessage = error.message;
     } else if (typeof error === 'object' && error !== null) {
       errorMessage = JSON.stringify(error);
