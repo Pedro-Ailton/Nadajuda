@@ -44,7 +44,6 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
   },
   async input => {
     console.log('[AI FLOW] Flow iniciado com o input:', input);
-    const { pastPerformance, goals } = input;
 
     const prompt = `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance and goals.
 
@@ -53,8 +52,8 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
     
       Consider the following information about the athlete when generating workout suggestions:
     
-      Past Performance: ${pastPerformance}
-      Goals: ${goals}
+      Past Performance: ${input.pastPerformance}
+      Goals: ${input.goals}
     
       Provide detailed and specific workout suggestions that will help the athlete achieve their goals. Consider available training time and create an actionable plan. Your response must be only the workout plan text, without any introductory phrases like "Here is a workout suggestion". For example:
     
@@ -70,7 +69,7 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
       - 200m easy pull
       - 100m backstroke
       `;
-    
+
     console.log('[AI FLOW] Enviando prompt para o modelo gemini-pro...');
 
     const response = await ai.generate({
@@ -91,3 +90,4 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
     return { workoutSuggestions: suggestionText };
   }
 );
+
