@@ -33,31 +33,32 @@ export type GenerateWorkoutSuggestionsOutput = z.infer<
 export async function generateWorkoutSuggestions(
   input: GenerateWorkoutSuggestionsInput
 ): Promise<GenerateWorkoutSuggestionsOutput> {
-  try {
-    const result = await generateWorkoutSuggestionsFlow(input);
-    return result;
-  } catch (error) {
-    console.error('[AI FLOW] Erro ao executar o flow:', error);
-    // Rethrow para que a Server Action possa capturar
-    throw error;
-  }
+  console.log('[AI FLOW] Iniciando o flow com o input:', input);
+  
+  const result = await generateWorkoutSuggestionsFlow(input);
+  
+  console.log('[AI FLOW] Flow concluído com o resultado:', result);
+  return result;
 }
 
-const generateWorkoutSuggestionsPrompt = ai.definePrompt(
+
+const generateWorkoutSuggestionsFlow = ai.defineFlow(
   {
-    name: 'generateWorkoutSuggestionsPrompt',
-    model: 'gemini-pro',
-    input: { schema: GenerateWorkoutSuggestionsInputSchema },
-    output: { schema: GenerateWorkoutSuggestionsOutputSchema },
-    prompt: `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance and goals.
+    name: 'generateWorkoutSuggestionsFlow',
+    inputSchema: GenerateWorkoutSuggestionsInputSchema,
+    outputSchema: GenerateWorkoutSuggestionsOutputSchema,
+  },
+  async (input) => {
+    
+    const prompt = `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance and goals.
 
 Your response should be a structured workout plan, including warm-up, main set, and cool-down sections.
 For each part of the workout, provide specific distances, strokes, and target times or effort levels.
 
 Consider the following information about the athlete when generating workout suggestions:
 
-Past Performance: {{{pastPerformance}}}
-Goals: {{{goals}}}
+Past Performance: ${input.pastPerformance}
+Goals: ${input.goals}
 
 Provide detailed and specific workout suggestions that will help the athlete achieve their goals. Consider available training time and create an actionable plan. Your response must be only the workout plan text, without any introductory phrases like "Here is a workout suggestion". For example:
 
@@ -72,24 +73,33 @@ Main Set:
 Cool-down:
 - 200m easy pull
 - 100m backstroke
-`,
-  },
-);
-
-
-const generateWorkoutSuggestionsFlow = ai.defineFlow(
-  {
-    name: 'generateWorkoutSuggestionsFlow',
-    inputSchema: GenerateWorkoutSuggestionsInputSchema,
-    outputSchema: GenerateWorkoutSuggestionsOutputSchema,
-  },
-  async (input) => {
-    const { output } = await generateWorkoutSuggestionsPrompt(input);
-
-    if (!output?.workoutSuggestions) {
-      throw new Error('A resposta da IA está vazia ou malformada.');
-    }
+`;
     
-    return output;
+    console.log('[AI FLOW] Enviando prompt para o modelo gemini-1.5-flash-latest...');
+
+    try {
+      const response = await ai.generate({
+        model: googleAI.model('gemini-1.5-flash-latest'),
+        prompt: prompt,
+      });
+
+      console.log('[AI FLOW] Resposta BRUTA da API recebida:', JSON.stringify(response, null, 2));
+
+      const suggestionText = response.text;
+      console.log('[AI FLOW] Texto extraído da resposta:', suggestionText);
+
+      if (!suggestionText) {
+        throw new Error('A resposta da IA está vazia.');
+      }
+      
+      return { workoutSuggestions: suggestionText };
+
+    } catch (error) {
+      console.error('[AI FLOW] Erro ao chamar a API de geração:', error);
+      if (error instanceof Error) {
+        throw new Error(`Erro na API da IA: ${error.message}`);
+      }
+      throw new Error('Ocorreu um erro desconhecido na geração da IA.');
+    }
   }
 );
