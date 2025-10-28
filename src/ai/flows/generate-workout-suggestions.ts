@@ -10,6 +10,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const GenerateWorkoutSuggestionsInputSchema = z.object({
@@ -47,7 +48,7 @@ export async function generateWorkoutSuggestions(
 const generateWorkoutSuggestionsPrompt = ai.definePrompt(
   {
     name: 'generateWorkoutSuggestionsPrompt',
-    model: 'gemini-1.0-pro',
+    model: googleAI.model('gemini-1.0-pro'),
     input: { schema: GenerateWorkoutSuggestionsInputSchema },
     output: { schema: GenerateWorkoutSuggestionsOutputSchema },
     prompt: `You are an expert swimming coach who provides personalized workout suggestions based on an athlete's performance and goals.
@@ -88,7 +89,7 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
     console.log('[AI FLOW] Enviando prompt para o modelo...');
     const { output } = await generateWorkoutSuggestionsPrompt(input);
 
-    if (!output) {
+    if (!output?.workoutSuggestions) {
       console.error('[AI FLOW] Erro: A resposta da IA está vazia ou malformada.');
       throw new Error('A resposta da IA está vazia ou malformada.');
     }
