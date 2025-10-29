@@ -3,11 +3,25 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
 import "./globals.css";
+import { Alegreya, Belleza } from 'next/font/google';
 
 export const metadata: Metadata = {
   title: "NadAjuda",
   description: "Seu assistente de natação personalizado com IA.",
 };
+
+const alegreya = Alegreya({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-alegreya',
+});
+
+const belleza = Belleza({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-belleza',
+  weight: '400',
+});
 
 export default function RootLayout({
   children,
@@ -15,12 +29,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400..900;1,400..900&family=Belleza&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="pt-BR" suppressHydrationWarning className={`${alegreya.variable} ${belleza.variable}`}>
+      <head />
       <body className="font-body antialiased">
         <ThemeProvider
           attribute="class"
