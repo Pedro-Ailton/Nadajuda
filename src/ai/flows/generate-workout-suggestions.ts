@@ -2,8 +2,8 @@
 'use server';
 
 /**
- * @fileOverview A mock AI-powered workout suggestion generator.
- * This version returns a hardcoded workout suggestion to bypass external API issues.
+ * @fileOverview An AI-powered workout suggestion generator.
+ * This version calls a real Gemini model to get workout suggestions.
  *
  * - generateWorkoutSuggestions - A function that generates workout suggestions based on user data.
  * - GenerateWorkoutSuggestionsInput - The input type for the generateWorkoutSuggestions function.
@@ -11,6 +11,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const GenerateWorkoutSuggestionsInputSchema = z.object({
@@ -35,8 +36,26 @@ export async function generateWorkoutSuggestions(
   input: GenerateWorkoutSuggestionsInput
 ): Promise<GenerateWorkoutSuggestionsOutput> {
   // It calls the Genkit flow and returns its output.
-  return await generateWorkoutSuggestionsFlow(input);
+  const result = await generateWorkoutSuggestionsFlow(input);
+  return result;
 }
+
+const generateWorkoutSuggestionsPrompt = ai.definePrompt(
+  {
+    name: 'generateWorkoutSuggestionsPrompt',
+    input: { schema: GenerateWorkoutSuggestionsInputSchema },
+    output: { schema: GenerateWorkoutSuggestionsOutputSchema },
+    model: googleAI.model('gemini-1.5-flash-latest'),
+    prompt: `You are an expert swimming coach. Based on the athlete's past performance and goals, create a detailed and high-quality workout plan. Provide a response in Portuguese.
+
+Past Performance:
+{{{pastPerformance}}}
+
+Goals:
+{{{goals}}}
+`,
+  }
+);
 
 
 const generateWorkoutSuggestionsFlow = ai.defineFlow(
@@ -46,28 +65,11 @@ const generateWorkoutSuggestionsFlow = ai.defineFlow(
     outputSchema: GenerateWorkoutSuggestionsOutputSchema,
   },
   async (input) => {
-    // Instead of calling an external AI, we return a hardcoded, high-quality workout.
-    // This ensures the feature works reliably.
-    const mockSuggestion = `
-Aquecimento:
-- 400m nado fácil (alternando estilos)
-- 4x50m pernada com prancha (intervalo de 1:00)
-- 4x50m exercício educativo (foco na sua necessidade)
-
-Série Principal (Foco em Velocidade e Resistência):
-- 8x100m estilo livre (crawl) a cada 1:45. Tente manter um ritmo forte e constante, como se fosse para uma prova de 800m.
-- 6x50m estilo principal (ex: borboleta) a cada 1:15, focando na técnica e na explosão.
-
-Série Secundária (Pernada):
-- 4x100m pernada forte com prancha a cada 2:00.
-
-Arrefecimento:
-- 200m nado muito leve, soltando a musculatura.
-- 100m costas com braçadas longas.
-`;
-
-    return {
-      workoutSuggestions: mockSuggestion.trim(),
-    };
+    const response = await generateWorkoutSuggestionsPrompt(input);
+    const output = response.output();
+    if (!output) {
+        throw new Error('AI failed to generate a valid workout suggestion.');
+    }
+    return output;
   }
 );
