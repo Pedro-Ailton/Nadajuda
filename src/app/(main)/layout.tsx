@@ -13,13 +13,12 @@ import {
 import { Logo } from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { NavMenu } from '@/components/nav-menu';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { getAuth, signOut } from 'firebase/auth';
 import { LogOut } from 'lucide-react';
-import { doc, getDoc } from 'firebase/firestore';
 
 function Header() {
   return (
@@ -37,27 +36,13 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const { user, isUserLoading } = useUser();
-  const firestore = useFirestore();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isUserLoading) {
-      if (!user) {
-        router.push('/login');
-      } else {
-        const checkUserProfile = async () => {
-          if (firestore) {
-            const userDocRef = doc(firestore, 'users', user.uid);
-            const userDoc = await getDoc(userDocRef);
-            if (!userDoc.exists()) {
-              router.push('/personalize');
-            }
-          }
-        };
-        checkUserProfile();
-      }
+    if (!isUserLoading && !user) {
+      router.push('/login');
     }
-  }, [user, isUserLoading, router, firestore]);
+  }, [user, isUserLoading, router]);
 
   const handleSignOut = async () => {
     const auth = getAuth();
