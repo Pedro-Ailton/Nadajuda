@@ -25,7 +25,6 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
     const firestore = useFirestore();
     const { user } = useUser();
     const descTextareaRef = React.useRef<HTMLTextAreaElement>(null);
-    const obsTextareaRef = React.useRef<HTMLTextAreaElement>(null);
     
 
     const debouncedUpdate = useDebouncedCallback((updatedItems) => {
@@ -49,15 +48,6 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
         handleItemChange('descricao', e.target.value);
     };
 
-    const handleObsTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        if (e.target) {
-            e.target.style.height = 'auto';
-            e.target.style.height = `${e.target.scrollHeight}px`;
-        }
-        handleItemChange('observacoes', e.target.value);
-    }
-    
-
     React.useEffect(() => {
         const textarea = descTextareaRef.current;
         if (textarea) {
@@ -65,14 +55,6 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
             textarea.style.height = `${textarea.scrollHeight}px`;
         }
     }, [item.descricao]);
-    
-    React.useEffect(() => {
-        const textarea = obsTextareaRef.current;
-        if (textarea) {
-            textarea.style.height = 'auto';
-            textarea.style.height = `${textarea.scrollHeight}px`;
-        }
-    }, [item.observacoes]);
 
 
     const handleTimeChange = (timeIndex: number, value: string) => {
@@ -115,8 +97,8 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
 
     return (
         <TableRow>
-            <TableCell className="p-1 align-top"><Input defaultValue={item.fase} onChange={(e) => handleItemChange('fase', e.target.value)} className="text-center" /></TableCell>
-            <TableCell className="p-1 align-top"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="text-center" /></TableCell>
+            <TableCell className="p-1 align-top"><Input defaultValue={item.fase} onChange={(e) => handleItemChange('fase', e.target.value)} className="text-center w-32" /></TableCell>
+            <TableCell className="p-1 align-top"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="text-center w-20" /></TableCell>
             <TableCell className="p-1 align-top min-w-[350px]">
                 <Textarea 
                     ref={descTextareaRef}
@@ -128,12 +110,10 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
             </TableCell>
             <TableCell className="p-1 align-top"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center w-24" /></TableCell>
             <TableCell className="p-1 align-top">
-                 <Textarea 
-                    ref={obsTextareaRef}
+                <Input 
                     defaultValue={item.observacoes} 
-                    onChange={handleObsTextareaChange} 
-                    className="text-left min-h-[40px] resize-none overflow-hidden"
-                    rows={1}
+                    onChange={(e) => handleItemChange('observacoes', e.target.value)}
+                    className="text-left"
                 />
             </TableCell>
              {Array.from({ length: maxTemposInWorkout }).map((_, i) => (
