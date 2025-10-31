@@ -120,17 +120,17 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
                     ref={descTextareaRef}
                     defaultValue={item.descricao} 
                     onChange={handleDescTextareaChange} 
-                    className="text-left min-h-[40px] resize-none overflow-hidden"
+                    className="text-center min-h-[40px] resize-none overflow-hidden"
                     rows={1}
                 />
             </TableCell>
-            <TableCell className="p-1 align-middle"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center w-12" /></TableCell>
+            <TableCell className="p-1 align-middle"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center w-10" /></TableCell>
             <TableCell className="p-1 align-middle">
                  <Textarea 
                     ref={obsTextareaRef}
                     defaultValue={item.observacoes} 
                     onChange={handleObsTextareaChange} 
-                    className="text-left min-h-[40px] resize-none overflow-hidden"
+                    className="text-center min-h-[40px] resize-none overflow-hidden"
                     rows={1}
                 />
             </TableCell>
