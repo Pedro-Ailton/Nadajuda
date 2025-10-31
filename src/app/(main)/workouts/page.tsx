@@ -21,7 +21,7 @@ import { useDebouncedCallback } from 'use-debounce';
 import { Textarea } from '@/components/ui/textarea';
 import React from 'react';
 
-const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: WorkoutItem, itemIndex: number }) => {
+const WorkoutRow = ({ workout, item, itemIndex, onDelete }: { workout: Workout, item: WorkoutItem, itemIndex: number, onDelete: (index: number) => void }) => {
     const firestore = useFirestore();
     const { user } = useUser();
     const descTextareaRef = React.useRef<HTMLTextAreaElement>(null);
@@ -97,8 +97,8 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
 
     return (
         <TableRow>
-            <TableCell className="p-1 align-top"><Input defaultValue={item.fase} onChange={(e) => handleItemChange('fase', e.target.value)} className="text-center w-32" /></TableCell>
-            <TableCell className="p-1 align-top"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="text-center w-20" /></TableCell>
+            <TableCell className="p-1 align-top"><Input defaultValue={item.fase} onChange={(e) => handleItemChange('fase', e.target.value)} className="w-32" /></TableCell>
+            <TableCell className="p-1 align-top"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="w-24" /></TableCell>
             <TableCell className="p-1 align-top min-w-[350px]">
                 <Textarea 
                     ref={descTextareaRef}
@@ -108,7 +108,7 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
                     rows={1}
                 />
             </TableCell>
-            <TableCell className="p-1 align-top"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center w-24" /></TableCell>
+            <TableCell className="p-1 align-top"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="w-20" /></TableCell>
             <TableCell className="p-1 align-top">
                 <Input 
                     defaultValue={item.observacoes} 
@@ -137,6 +137,11 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
             <TableCell className="text-center p-1 align-top">
                  <Button variant="ghost" size="icon" onClick={addRegisteredTime}><Plus className="h-4 w-4"/></Button>
             </TableCell>
+            <TableCell className="p-1 align-top">
+                <Button variant="ghost" size="icon" onClick={() => onDelete(itemIndex)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+            </TableCell>
         </TableRow>
     )
 }
@@ -145,16 +150,17 @@ const WorkoutTable = ({ workout }: { workout: Workout }) => {
     const { user } = useUser();
     const firestore = useFirestore();
 
-    const debouncedUpdate = useDebouncedCallback((updatedItems) => {
+    const updateItems = (updatedItems: WorkoutItem[]) => {
         if (!user || !firestore) return;
         const workoutRef = doc(firestore, 'users', user.uid, 'workouts', workout.id);
         updateDoc(workoutRef, { workoutItems: updatedItems });
-    }, 1000);
+    };
+
+    const debouncedUpdate = useDebouncedCallback(updateItems, 1000);
 
 
     const addNewRow = () => {
         if (!user || !firestore) return;
-        const workoutRef = doc(firestore, 'users', user.uid, 'workouts', workout.id);
         const newWorkoutItem: WorkoutItem = {
             fase: '',
             repeticoes: 0,
@@ -164,7 +170,13 @@ const WorkoutTable = ({ workout }: { workout: Workout }) => {
             temposRegistrados: { '0': '' }, // Start with one time column
         };
         const updatedItems = [...(workout.workoutItems || []), newWorkoutItem];
-        updateDoc(workoutRef, { workoutItems: updatedItems });
+        updateItems(updatedItems);
+    };
+
+    const handleDeleteRow = (indexToDelete: number) => {
+        if (!workout.workoutItems) return;
+        const updatedItems = workout.workoutItems.filter((_, index) => index !== indexToDelete);
+        updateItems(updatedItems);
     };
 
     const handleDeleteTimeColumn = (colIndex: number) => {
@@ -193,11 +205,11 @@ const WorkoutTable = ({ workout }: { workout: Workout }) => {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead className="text-center bg-muted text-muted-foreground">Fase</TableHead>
-                        <TableHead className="text-center bg-muted text-muted-foreground">Repetições</TableHead>
-                        <TableHead className="text-center bg-muted text-muted-foreground min-w-[350px]">Descrição</TableHead>
-                        <TableHead className="text-center bg-muted text-muted-foreground">Intensidade</TableHead>
-                        <TableHead className="text-center bg-muted text-muted-foreground">Obs.</TableHead>
+                        <TableHead className="bg-muted text-muted-foreground">Fase</TableHead>
+                        <TableHead className="bg-muted text-muted-foreground">Repetições</TableHead>
+                        <TableHead className="bg-muted text-muted-foreground min-w-[350px]">Descrição</TableHead>
+                        <TableHead className="bg-muted text-muted-foreground">Intensidade</TableHead>
+                        <TableHead className="bg-muted text-muted-foreground">Obs.</TableHead>
                         {Array.from({ length: maxTempos }).map((_, i) => (
                             <TableHead key={i} className="text-center bg-muted text-muted-foreground">
                                 <div className='flex items-center justify-center gap-1'>
@@ -208,12 +220,13 @@ const WorkoutTable = ({ workout }: { workout: Workout }) => {
                                 </div>
                             </TableHead>
                         ))}
+                        <TableHead className="text-center bg-muted text-muted-foreground">Tempos</TableHead>
                         <TableHead className="text-center bg-muted text-muted-foreground">Ações</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {workout.workoutItems?.map((item, index) => (
-                        <WorkoutRow key={index} workout={workout} item={item} itemIndex={index} />
+                        <WorkoutRow key={index} workout={workout} item={item} itemIndex={index} onDelete={handleDeleteRow} />
                     ))}
                 </TableBody>
             </Table>
