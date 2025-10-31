@@ -13,7 +13,7 @@ export const WorkoutSchema = z.object({
   id: z.string().describe("Unique identifier for the Workout entity."),
   name: z.string().describe("Name of the workout session (e.g., 'Treino de Velocidade')."),
   date: z.string().describe("Date the workout was performed (ISO 8601 format)."),
-  workoutItems: z.array(WorkoutItemSchema).optional().describe("An array of workout items that make up the session."),
+  workoutItems: z.array(WorkoutItemSchema).describe("An array of workout items that make up the session."),
   userProfileId: z.string().describe("Reference to UserProfile."),
 });
 
