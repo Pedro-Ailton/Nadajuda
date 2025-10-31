@@ -101,7 +101,7 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
         <TableRow>
             <TableCell className="p-1 align-top"><Input defaultValue={item.fase} onChange={(e) => handleItemChange('fase', e.target.value)} className="text-center" /></TableCell>
             <TableCell className="p-1 align-top"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="text-center w-20" /></TableCell>
-            <TableCell className="p-1 align-top min-w-[500px]">
+            <TableCell className="p-1 align-top">
                 <Textarea 
                     ref={textareaRef}
                     defaultValue={item.descricao} 
@@ -192,7 +192,7 @@ const WorkoutTable = ({ workout }: { workout: Workout }) => {
                     <TableRow>
                         <TableHead className="text-center bg-muted text-muted-foreground">Fase</TableHead>
                         <TableHead className="text-center bg-muted text-muted-foreground">Repetições</TableHead>
-                        <TableHead className="text-center bg-muted text-muted-foreground min-w-[500px]">Descrição</TableHead>
+                        <TableHead className="text-center bg-muted text-muted-foreground">Descrição</TableHead>
                         <TableHead className="text-center bg-muted text-muted-foreground">Intensidade</TableHead>
                         <TableHead className="text-center bg-muted text-muted-foreground">Obs.</TableHead>
                         {Array.from({ length: maxTempos }).map((_, i) => (
