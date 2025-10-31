@@ -24,6 +24,7 @@ import React from 'react';
 const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: WorkoutItem, itemIndex: number }) => {
     const firestore = useFirestore();
     const { user } = useUser();
+    const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
     const debouncedUpdate = useDebouncedCallback((updatedItems) => {
         if (!user || !firestore) return;
@@ -45,6 +46,15 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
         // Save change
         handleItemChange('descricao', e.target.value);
     };
+    
+    React.useEffect(() => {
+        const textarea = textareaRef.current;
+        if (textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = `${textarea.scrollHeight}px`;
+        }
+    }, [item.descricao]);
+
 
     const handleTimeChange = (timeIndex: number, value: string) => {
         if (!workout.workoutItems) return;
@@ -87,18 +97,19 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
 
     return (
         <TableRow>
-            <TableCell className="text-center p-1"><Input defaultValue={item.fase} onChange={(e) => handleItemChange('fase', e.target.value)} className="text-center" /></TableCell>
-            <TableCell className="text-center p-1"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="text-center" /></TableCell>
-            <TableCell className="text-center p-1 min-w-[300px]">
+            <TableCell className="p-1 align-top"><Input defaultValue={item.fase} onChange={(e) => handleItemChange('fase', e.target.value)} className="text-center" /></TableCell>
+            <TableCell className="p-1 align-top"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="text-center w-20" /></TableCell>
+            <TableCell className="p-1 align-top min-w-[300px]">
                 <Textarea 
+                    ref={textareaRef}
                     defaultValue={item.descricao} 
                     onChange={handleTextareaChange} 
-                    className="text-center min-h-[40px] resize-none overflow-hidden"
+                    className="text-left min-h-[40px] resize-none overflow-hidden"
                     rows={1}
                 />
             </TableCell>
-            <TableCell className="text-center p-1"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center" /></TableCell>
-            <TableCell className="text-center p-1"><Input defaultValue={item.observacoes} onChange={(e) => handleItemChange('observacoes', e.target.value)} className="text-center" /></TableCell>
+            <TableCell className="p-1 align-top"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center" /></TableCell>
+            <TableCell className="p-1 align-top"><Input defaultValue={item.observacoes} onChange={(e) => handleItemChange('observacoes', e.target.value)} className="text-center" /></TableCell>
              {Array.from({ length: maxTemposInWorkout }).map((_, i) => (
                  <TableCell key={i} className="text-center p-1 align-top">
                     {i < temposRegistradosCount ? (
@@ -117,7 +128,7 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
                     )}
                 </TableCell>
             ))}
-            <TableCell className="text-center p-1">
+            <TableCell className="text-center p-1 align-top">
                  <Button variant="ghost" size="icon" onClick={addRegisteredTime}><Plus className="h-4 w-4"/></Button>
             </TableCell>
         </TableRow>
@@ -258,3 +269,5 @@ export default function WorkoutsPage() {
     </div>
   );
 }
+
+    
