@@ -7,11 +7,12 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { Home, Flame, Trophy, User } from 'lucide-react';
+import { Home, Flame, Trophy, User, Bot } from 'lucide-react';
 
 const menuItems = [
   { href: '/dashboard', label: 'Painel', icon: Home },
   { href: '/workouts', label: 'Treinos', icon: Flame },
+  { href: '/ai-workouts', label: 'Treino IA', icon: Bot },
   { href: '/competitions', label: 'Competições', icon: Trophy },
   { href: '/profile', label: 'Perfil', icon: User },
 ];
