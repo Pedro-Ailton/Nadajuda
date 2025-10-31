@@ -29,9 +29,9 @@
           "description": "Personal notes or information provided by the user."
         },
         "avatarUrl": {
-            "type": "string",
-            "description": "URL for the user's avatar image.",
-            "format": "uri"
+          "type": "string",
+          "description": "URL for the user's avatar image.",
+          "format": "uri"
         }
       },
       "required": [
@@ -80,7 +80,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Workout",
       "type": "object",
-      "description": "Represents a workout created by the user.",
+      "description": "Represents a workout session containing multiple items.",
       "properties": {
         "id": {
           "type": "string",
@@ -92,22 +92,18 @@
         },
         "name": {
           "type": "string",
-          "description": "Name of the workout."
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the workout."
+          "description": "Name of the workout session (e.g., 'Treino de Velocidade')."
         },
         "date": {
           "type": "string",
-          "description": "Date the workout was performed or is scheduled for.",
+          "description": "Date the workout was performed.",
           "format": "date-time"
         },
         "workoutItems": {
           "type": "array",
-          "description": "References to WorkoutItems. (Relationship: Workout 1:N WorkoutItem)",
+          "description": "An array of workout items that make up the session.",
           "items": {
-            "type": "string"
+            "$ref": "#/entities/WorkoutItem"
           }
         }
       },
@@ -122,33 +118,38 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "WorkoutItem",
       "type": "object",
-      "description": "Represents an item in a Workout.",
+      "description": "Represents a single row in a workout table.",
       "properties": {
-        "id": {
+        "fase": {
           "type": "string",
-          "description": "Unique identifier for the WorkoutItem entity."
+          "description": "Phase of the workout (e.g., 'Aquecimento', 'Série Principal', 'Relaxamento')."
         },
-        "workoutId": {
-          "type": "string",
-          "description": "Reference to Workout. (Relationship: Workout 1:N WorkoutItem)"
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the workout item."
-        },
-        "estimatedTime": {
+        "repeticoes": {
           "type": "number",
-          "description": "Estimated time for the workout item (in seconds)."
+          "description": "Number of repetitions for the set."
         },
-        "actualTime": {
-          "type": "number",
-          "description": "Actual time taken for the workout item (in seconds)."
+        "descricao": {
+          "type": "string",
+          "description": "Description of the set (e.g., '50m Livre')."
+        },
+        "intensidade": {
+          "type": "string",
+          "description": "Optional intensity of the set (e.g., 'A1', 'A2', 'MAX')."
+        },
+        "observacoes": {
+          "type": "string",
+          "description": "Optional observations, like equipment used or rest time."
+        },
+        "temposRegistrados": {
+          "type": "object",
+          "description": "A map of recorded times for repetitions, where the key is the repetition index (as a string) and the value is the time.",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "required": [
-        "id",
-        "workoutId",
-        "description"
+        "fase"
       ]
     },
     "Event": {
@@ -233,7 +234,7 @@
           "schema": {
             "$ref": "#/backend/entities/Workout"
           },
-          "description": "Stores workouts created by each user. Includes denormalized 'userProfileId' for authorization independence.",
+          "description": "Stores workouts created by each user. Includes denormalized 'userProfileId' for authorization independence. A workout contains an array of WorkoutItems.",
           "params": [
             {
               "name": "userProfileId",
@@ -242,30 +243,6 @@
             {
               "name": "workoutId",
               "description": "Unique identifier for the Workout entity."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userProfileId}/workouts/{workoutId}/workoutItems/{workoutItemId}",
-        "definition": {
-          "entityName": "WorkoutItem",
-          "schema": {
-            "$ref": "#/backend/entities/WorkoutItem"
-          },
-          "description": "Stores workout items for each workout. Includes denormalized 'userProfileId' for authorization independence.",
-          "params": [
-            {
-              "name": "userProfileId",
-              "description": "The Firebase Auth UID of the user."
-            },
-            {
-              "name": "workoutId",
-              "description": "Unique identifier for the Workout entity."
-            },
-            {
-              "name": "workoutItemId",
-              "description": "Unique identifier for the WorkoutItem entity."
             }
           ]
         }
@@ -287,6 +264,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to manage user profiles, competition times, workouts, workout items, and events for the NadAjuda application. It emphasizes authorization independence, clarity, and scalability, aligning with the core design principles. User profiles are stored under `/users/{userId}`, providing secure, path-based ownership. Competition times, workouts, and workout items are stored as subcollections under the user's profile, ensuring that only the user has access to their data. Events are stored in a top-level collection, `/events`, assuming they are global and accessible to all users. This design enforces consistent security rules based on ownership and avoids complex authorization logic. This structure facilitates simple, robust, and easily debuggable security rules, as access control is primarily based on user ID and path-based ownership. This eliminates the need for complex `get()` calls in security rules and enables atomic operations.\n\nTo achieve Authorization Independence, UserProfile ID is denormalized in all subcollections for simple and safe rules.\n\nQAPs are satisfied due to segregation of data. All `list` operations will be secure because only the authenticated user will be able to access resources under `/users/{userId}` path."
+    "reasoning": "The Firestore structure is designed to manage user profiles, competition times, and detailed workouts. User profiles are stored under `/users/{userId}`. Competition times and workouts are stored as subcollections under the user's profile to ensure data ownership. The Workout entity now contains an array of embedded WorkoutItem objects, reflecting the new table-based structure for workout details. This avoids creating a separate subcollection for workout items, simplifying data retrieval for a whole workout session. Events remain global. This design enforces clear ownership, simplifies security rules, and supports the requested editable table structure for workouts."
   }
 }

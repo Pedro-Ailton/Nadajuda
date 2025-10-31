@@ -1,6 +1,5 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -9,14 +8,129 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Flame } from 'lucide-react';
-import { WorkoutSuggestions } from './workout-suggestions';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
-import type { Workout } from '@/lib/types';
+import { collection, doc, query, orderBy, updateDoc } from 'firebase/firestore';
+import type { Workout, WorkoutItem } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
 import { AddWorkoutForm } from './add-workout-form';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Plus, Trash2 } from 'lucide-react';
+import { useDebouncedCallback } from 'use-debounce';
+
+const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: WorkoutItem, itemIndex: number }) => {
+    const firestore = useFirestore();
+    const { user } = useUser();
+
+    const debouncedUpdate = useDebouncedCallback((updatedItems) => {
+        if (!user || !firestore) return;
+        const workoutRef = doc(firestore, 'users', user.uid, 'workouts', workout.id);
+        updateDoc(workoutRef, { workoutItems: updatedItems });
+    }, 1000);
+
+    const handleItemChange = (field: keyof WorkoutItem, value: any) => {
+        if (!workout.workoutItems) return;
+        const updatedItems = [...workout.workoutItems];
+        updatedItems[itemIndex] = { ...updatedItems[itemIndex], [field]: value };
+        debouncedUpdate(updatedItems);
+    };
+
+    const handleTimeChange = (timeIndex: number, value: string) => {
+        if (!workout.workoutItems) return;
+        const updatedItems = [...workout.workoutItems];
+        const currentItem = updatedItems[itemIndex];
+        const updatedTimes = { ...currentItem.temposRegistrados, [timeIndex]: value };
+        updatedItems[itemIndex] = { ...currentItem, temposRegistrados: updatedTimes };
+        debouncedUpdate(updatedItems);
+    }
+    
+    const addRegisteredTime = () => {
+        if (!workout.workoutItems) return;
+        const updatedItems = [...workout.workoutItems];
+        const currentItem = updatedItems[itemIndex];
+        const nextTimeIndex = Object.keys(currentItem.temposRegistrados || {}).length;
+        const updatedTimes = { ...currentItem.temposRegistrados, [nextTimeIndex]: '' };
+        updatedItems[itemIndex] = { ...currentItem, temposRegistrados: updatedTimes };
+        debouncedUpdate(updatedItems);
+    }
+    
+    const temposRegistradosCount = Object.keys(item.temposRegistrados || {}).length;
+
+    return (
+        <TableRow>
+            <TableCell className="text-center p-1"><Input defaultValue={item.fase} onChange={(e) => handleItemChange('fase', e.target.value)} className="text-center" /></TableCell>
+            <TableCell className="text-center p-1"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="text-center" /></TableCell>
+            <TableCell className="text-center p-1"><Input defaultValue={item.descricao} onChange={(e) => handleItemChange('descricao', e.target.value)} className="text-center" /></TableCell>
+            <TableCell className="text-center p-1"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center" /></TableCell>
+            <TableCell className="text-center p-1"><Input defaultValue={item.observacoes} onChange={(e) => handleItemChange('observacoes', e.target.value)} className="text-center" /></TableCell>
+             {Array.from({ length: temposRegistradosCount }).map((_, i) => (
+                 <TableCell key={i} className="text-center p-1">
+                    <Input 
+                        defaultValue={item.temposRegistrados?.[i] || ''}
+                        onChange={(e) => handleTimeChange(i, e.target.value)}
+                        className="text-center" 
+                    />
+                </TableCell>
+            ))}
+            <TableCell className="text-center p-1">
+                 <Button variant="ghost" size="icon" onClick={addRegisteredTime}><Plus className="h-4 w-4"/></Button>
+            </TableCell>
+        </TableRow>
+    )
+}
+
+const WorkoutTable = ({ workout }: { workout: Workout }) => {
+    const { user } = useUser();
+    const firestore = useFirestore();
+
+    const addNewRow = () => {
+        if (!user || !firestore) return;
+        const workoutRef = doc(firestore, 'users', user.uid, 'workouts', workout.id);
+        const newWorkoutItem: WorkoutItem = {
+            fase: '',
+            repeticoes: 0,
+            descricao: '',
+            intensidade: '',
+            observacoes: '',
+            temposRegistrados: { '0': '' }, // Start with one time column
+        };
+        const updatedItems = [...(workout.workoutItems || []), newWorkoutItem];
+        updateDoc(workoutRef, { workoutItems: updatedItems });
+    };
+    
+    const maxTempos = workout.workoutItems?.reduce((max, item) => Math.max(max, Object.keys(item.temposRegistrados || {}).length), 0) || 1;
+
+    return (
+        <div className="p-2">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead className="text-center bg-green-200 text-black">Fase</TableHead>
+                        <TableHead className="text-center bg-green-200 text-black">Repetições</TableHead>
+                        <TableHead className="text-center bg-green-200 text-black">Descrição</TableHead>
+                        <TableHead className="text-center bg-green-200 text-black">Intensidade</TableHead>
+                        <TableHead className="text-center bg-green-200 text-black">Obs.</TableHead>
+                        {Array.from({ length: maxTempos }).map((_, i) => (
+                            <TableHead key={i} className="text-center bg-green-200 text-black">{i+1}º Tempo Registrado</TableHead>
+                        ))}
+                        <TableHead className="text-center bg-green-200 text-black">Ações</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {workout.workoutItems?.map((item, index) => (
+                        <WorkoutRow key={index} workout={workout} item={item} itemIndex={index} />
+                    ))}
+                </TableBody>
+            </Table>
+            <Button onClick={addNewRow} variant="outline" className="mt-4 w-full">
+                <Plus className="mr-2 h-4 w-4" />
+                Adicionar Linha
+            </Button>
+        </div>
+    )
+}
+
 
 export default function WorkoutsPage() {
   const { user } = useUser();
@@ -36,63 +150,33 @@ export default function WorkoutsPage() {
         <AddWorkoutForm />
       </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <Card className="shadow-md h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Flame />
-                Registro de Treinos
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Descrição</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    Array.from({ length: 5 }).map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-full" /></TableCell>
-                      </TableRow>
-                    ))
-                  ) : workouts && workouts.length > 0 ? (
-                    workouts.map((workout) => (
-                      <TableRow key={workout.id}>
-                         <TableCell>
-                          {new Date(workout.date).toLocaleDateString('pt-BR')}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {workout.name}
-                        </TableCell>
-                        <TableCell>
-                          {workout.description}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={3} className="text-center h-24">
-                        Nenhum treino registrado.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="lg:col-span-1">
-          <WorkoutSuggestions />
-        </div>
-      </div>
+       {isLoading ? (
+            <div className="space-y-4">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+            </div>
+        ) : workouts && workouts.length > 0 ? (
+             <Accordion type="single" collapsible className="w-full space-y-4">
+                {workouts.map(workout => (
+                     <AccordionItem value={workout.id} key={workout.id} className="border rounded-lg shadow-md bg-card">
+                        <AccordionTrigger className="p-4">
+                            <div className="flex justify-between w-full items-center">
+                                <span className="font-bold text-lg">{workout.name}</span>
+                                <span className="text-muted-foreground">{new Date(workout.date).toLocaleDateString('pt-BR')}</span>
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                           <WorkoutTable workout={workout} />
+                        </AccordionContent>
+                    </AccordionItem>
+                ))}
+            </Accordion>
+        ) : (
+            <div className="text-center py-12 text-muted-foreground">
+                Nenhum treino registrado. Clique em "Novo Treino" para começar.
+            </div>
+        )}
     </div>
   );
 }

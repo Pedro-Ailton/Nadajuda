@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -29,7 +28,6 @@ import { ptBR } from 'date-fns/locale';
 
 const workoutSchema = z.object({
   name: z.string().min(1, 'O nome do treino é obrigatório.'),
-  description: z.string().optional(),
   date: z.date({ required_error: 'A data do treino é obrigatória.' }),
 });
 
@@ -65,14 +63,16 @@ export function AddWorkoutForm() {
       ...data,
       date: data.date.toISOString(),
       userProfileId: user.uid,
+      // Add an initial empty workout item
+      workoutItems: []
     });
 
     toast({
       title: 'Sucesso!',
-      description: 'Seu treino foi registrado.',
+      description: 'Seu treino foi criado. Adicione os detalhes na tabela.',
     });
 
-    reset({ name: '', description: '', date: undefined });
+    reset({ name: '', date: undefined });
     setOpen(false);
   };
 
@@ -81,30 +81,19 @@ export function AddWorkoutForm() {
       <DialogTrigger asChild>
         <Button>
           <Plus className="-ml-1 mr-2 h-4 w-4" />
-          Registrar Treino
+          Novo Treino
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Registrar Novo Treino</DialogTitle>
+          <DialogTitle>Criar Novo Treino</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nome do Treino</Label>
-            <Input id="name" {...register('name')} placeholder="Ex: Série de Velocidade" />
+            <Input id="name" {...register('name')} placeholder="Ex: Treino de Velocidade" />
             {errors.name && (
               <p className="text-sm text-destructive">{errors.name.message}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Descrição</Label>
-            <Textarea
-              id="description"
-              {...register('description')}
-              placeholder="Ex: 8x50m Livre, saindo a cada 1:30"
-            />
-             {errors.description && (
-              <p className="text-sm text-destructive">{errors.description.message}</p>
             )}
           </div>
            <div className="space-y-2">
@@ -147,7 +136,7 @@ export function AddWorkoutForm() {
             <DialogClose asChild>
               <Button type="button" variant="ghost">Cancelar</Button>
             </DialogClose>
-            <Button type="submit">Salvar</Button>
+            <Button type="submit">Criar Treino</Button>
           </DialogFooter>
         </form>
       </DialogContent>
