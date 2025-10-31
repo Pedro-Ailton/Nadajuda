@@ -21,7 +21,7 @@ import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { generateWorkout, type GenerateWorkoutInput } from '@/ai/flows/generate-workout-flow';
+import { generateWorkoutFlow, type GenerateWorkoutInput } from '@/ai/flows/generate-workout-flow';
 
 export default function AiWorkoutsPage() {
   const { toast } = useToast();
@@ -54,7 +54,7 @@ export default function AiWorkoutsPage() {
     };
 
     try {
-      const workout = await generateWorkout(input);
+      const workout = await generateWorkoutFlow(input);
       setGeneratedWorkout(workout);
       toast({
         title: 'Treino Gerado!',

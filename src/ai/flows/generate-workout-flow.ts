@@ -2,7 +2,7 @@
 /**
  * @fileOverview A swimming workout generation AI agent.
  *
- * - generateWorkout - A function that handles the workout generation process.
+ * - generateWorkoutFlow - A function that handles the workout generation process.
  * - GenerateWorkoutInput - The input type for the generateWorkout function.
  * - GenerateWorkoutOutput - The return type for the generateWorkout function, which is a structured Workout object.
  */
@@ -23,16 +23,6 @@ export type GenerateWorkoutInput = z.infer<typeof GenerateWorkoutInputSchema>;
 
 // Define the output schema, which is simply the Workout schema
 export type GenerateWorkoutOutput = z.infer<typeof WorkoutSchema>;
-
-/**
- * Calls the Genkit flow to generate a new swimming workout based on user inputs.
- * @param input The user's workout preferences.
- * @returns A promise that resolves to a structured Workout object.
- */
-export async function generateWorkout(input: GenerateWorkoutInput): Promise<GenerateWorkoutOutput> {
-  // Await the flow and return its result directly.
-  return await generateWorkoutFlow(input);
-}
 
 // Define the prompt for the AI model
 const prompt = ai.definePrompt({
@@ -60,7 +50,7 @@ Generate a response in the specified JSON format. Ensure the 'userProfileId' and
 });
 
 // Define the Genkit flow
-const generateWorkoutFlow = ai.defineFlow(
+export const generateWorkoutFlow = ai.defineFlow(
   {
     name: 'generateWorkoutFlow',
     inputSchema: GenerateWorkoutInputSchema,
