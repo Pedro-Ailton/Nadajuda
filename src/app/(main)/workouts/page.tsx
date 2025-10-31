@@ -106,15 +106,15 @@ const WorkoutTable = ({ workout }: { workout: Workout }) => {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead className="text-center bg-green-200 text-black">Fase</TableHead>
-                        <TableHead className="text-center bg-green-200 text-black">Repetições</TableHead>
-                        <TableHead className="text-center bg-green-200 text-black">Descrição</TableHead>
-                        <TableHead className="text-center bg-green-200 text-black">Intensidade</TableHead>
-                        <TableHead className="text-center bg-green-200 text-black">Obs.</TableHead>
+                        <TableHead className="text-center bg-muted text-muted-foreground">Fase</TableHead>
+                        <TableHead className="text-center bg-muted text-muted-foreground">Repetições</TableHead>
+                        <TableHead className="text-center bg-muted text-muted-foreground">Descrição</TableHead>
+                        <TableHead className="text-center bg-muted text-muted-foreground">Intensidade</TableHead>
+                        <TableHead className="text-center bg-muted text-muted-foreground">Obs.</TableHead>
                         {Array.from({ length: maxTempos }).map((_, i) => (
-                            <TableHead key={i} className="text-center bg-green-200 text-black">{i+1}º Tempo Registrado</TableHead>
+                            <TableHead key={i} className="text-center bg-muted text-muted-foreground">{i+1}º Tempo Registrado</TableHead>
                         ))}
-                        <TableHead className="text-center bg-green-200 text-black">Ações</TableHead>
+                        <TableHead className="text-center bg-muted text-muted-foreground">Ações</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
