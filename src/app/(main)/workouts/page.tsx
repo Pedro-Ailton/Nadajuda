@@ -61,7 +61,8 @@ const WorkoutRow = ({ workout, item, itemIndex, onDelete }: { workout: Workout, 
         if (!workout.workoutItems) return;
         const updatedItems = [...workout.workoutItems];
         const currentItem = updatedItems[itemIndex];
-        const updatedTimes = { ...currentItem.temposRegistrados, [timeIndex]: value };
+        const updatedTimes = [...(currentItem.temposRegistrados || [])];
+        updatedTimes[timeIndex] = value;
         updatedItems[itemIndex] = { ...currentItem, temposRegistrados: updatedTimes };
         debouncedUpdate(updatedItems);
     }
@@ -70,8 +71,7 @@ const WorkoutRow = ({ workout, item, itemIndex, onDelete }: { workout: Workout, 
         if (!workout.workoutItems) return;
         const updatedItems = [...workout.workoutItems];
         const currentItem = updatedItems[itemIndex];
-        const nextTimeIndex = Object.keys(currentItem.temposRegistrados || {}).length;
-        const updatedTimes = { ...currentItem.temposRegistrados, [nextTimeIndex]: '' };
+        const updatedTimes = [...(currentItem.temposRegistrados || []), ''];
         updatedItems[itemIndex] = { ...currentItem, temposRegistrados: updatedTimes };
         debouncedUpdate(updatedItems);
     }
@@ -80,20 +80,14 @@ const WorkoutRow = ({ workout, item, itemIndex, onDelete }: { workout: Workout, 
         if (!workout.workoutItems) return;
         const updatedItems = [...workout.workoutItems];
         const currentItem = updatedItems[itemIndex];
-        const tempos = { ...currentItem.temposRegistrados };
-        delete tempos[timeIndex];
-        
-        const newTempos: Record<string, string> = {};
-        Object.values(tempos).forEach((value, index) => {
-            newTempos[index] = value;
-        });
-
-        updatedItems[itemIndex] = { ...currentItem, temposRegistrados: newTempos };
+        const tempos = [...(currentItem.temposRegistrados || [])];
+        tempos.splice(timeIndex, 1);
+        updatedItems[itemIndex] = { ...currentItem, temposRegistrados: tempos };
         debouncedUpdate(updatedItems);
     }
     
-    const temposRegistradosCount = Object.keys(item.temposRegistrados || {}).length;
-    const maxTemposInWorkout = workout.workoutItems?.reduce((max, item) => Math.max(max, Object.keys(item.temposRegistrados || {}).length), 0) || 0;
+    const temposRegistradosCount = item.temposRegistrados?.length || 0;
+    const maxTemposInWorkout = workout.workoutItems?.reduce((max, item) => Math.max(max, item.temposRegistrados?.length || 0), 0) || 0;
 
     return (
         <TableRow>
@@ -167,7 +161,7 @@ const WorkoutTable = ({ workout }: { workout: Workout }) => {
             descricao: '',
             intensidade: '',
             observacoes: '',
-            temposRegistrados: { '0': '' }, // Start with one time column
+            temposRegistrados: [''], // Start with one time column
         };
         const updatedItems = [...(workout.workoutItems || []), newWorkoutItem];
         updateItems(updatedItems);
@@ -183,22 +177,15 @@ const WorkoutTable = ({ workout }: { workout: Workout }) => {
         if (!workout.workoutItems) return;
         
         const updatedItems = workout.workoutItems.map(item => {
-            const tempos = { ...item.temposRegistrados };
-            const timeValues = Object.values(tempos);
-            timeValues.splice(colIndex, 1);
-            
-            const newTempos: Record<string, string> = {};
-            timeValues.forEach((value, index) => {
-                newTempos[index] = value;
-            });
-            
-            return { ...item, temposRegistrados: newTempos };
+            const tempos = [...(item.temposRegistrados || [])];
+            tempos.splice(colIndex, 1);
+            return { ...item, temposRegistrados: tempos };
         });
 
         debouncedUpdate(updatedItems);
     }
     
-    const maxTempos = workout.workoutItems?.reduce((max, item) => Math.max(max, Object.keys(item.temposRegistrados || {}).length), 0) || 1;
+    const maxTempos = workout.workoutItems?.reduce((max, item) => Math.max(max, item.temposRegistrados?.length || 0), 0) || 1;
 
     return (
         <div className="p-2 overflow-x-auto">

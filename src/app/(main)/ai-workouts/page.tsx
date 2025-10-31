@@ -17,8 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { collection, addDoc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { generateWorkoutFlow, type GenerateWorkoutInput } from '@/ai/flows/generate-workout-flow';
@@ -72,24 +72,35 @@ export default function AiWorkoutsPage() {
     }
   };
 
-  const handleSaveWorkout = () => {
+  const handleSaveWorkout = async () => {
     if (!generatedWorkout || !user || !firestore) return;
     
-    const workoutsCollection = collection(
-      firestore,
-      'users',
-      user.uid,
-      'workouts'
-    );
+    try {
+      const workoutsCollection = collection(
+        firestore,
+        'users',
+        user.uid,
+        'workouts'
+      );
+  
+      // The generated workout object already matches the Firestore schema.
+      // We don't need a non-blocking update here as we want to confirm it's saved.
+      await addDoc(workoutsCollection, generatedWorkout);
+  
+      toast({
+        title: 'Treino Salvo!',
+        description: 'O treino gerado foi adicionado à sua lista.',
+      });
+      setGeneratedWorkout(null);
 
-    // The generated workout object already matches the Firestore schema.
-    addDocumentNonBlocking(workoutsCollection, generatedWorkout);
-
-    toast({
-      title: 'Treino Salvo!',
-      description: 'O treino gerado foi adicionado à sua lista.',
-    });
-    setGeneratedWorkout(null);
+    } catch (error: any) {
+       console.error("Error saving workout:", error);
+       toast({
+        variant: 'destructive',
+        title: 'Erro ao Salvar Treino',
+        description: error.message || 'Não foi possível salvar o treino.',
+      });
+    }
   };
 
   return (

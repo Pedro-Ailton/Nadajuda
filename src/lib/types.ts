@@ -7,18 +7,18 @@ export type Competition = {
 
 export type WorkoutItem = {
   fase: string;
-  repeticoes?: number;
-  descricao?: string;
-  intensidade?: string;
-  observacoes?: string;
-  temposRegistrados?: Record<string, string>;
+  repeticoes: number;
+  descricao: string;
+  intensidade: string;
+  observacoes: string;
+  temposRegistrados: string[];
 };
 
 export type Workout = {
   id: string;
   name: string;
   date: string;
-  workoutItems?: WorkoutItem[];
+  workoutItems: WorkoutItem[];
   userProfileId: string;
 };
 

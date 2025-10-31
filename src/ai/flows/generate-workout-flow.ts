@@ -38,7 +38,7 @@ The workout name should be creative and reflect the main objective (e.g., "Explo
 
 The workout items should be detailed and follow a logical progression. The total duration of all items should be close to the user-specified duration. Use Portuguese (Brazil) for all descriptions and names.
 
-IMPORTANT: You MUST provide a value for every field in the output schema. If a field like 'intensidade' or 'observacoes' is not relevant for a specific item, provide an empty string "" instead of omitting it. For 'repeticoes', provide 0 if not applicable. For 'temposRegistrados', provide an empty object {} if not applicable.
+IMPORTANT: You MUST provide a value for every field in the output schema. If a field like 'intensidade' or 'observacoes' is not relevant for a specific item, provide an empty string "" instead of omitting it. For 'repeticoes', provide 0 if not applicable. For 'temposRegistrados', provide an empty array [] if not applicable.
 
 Workout Details:
 - Main Objective: {{{objective}}}
