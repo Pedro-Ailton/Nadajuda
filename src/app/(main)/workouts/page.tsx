@@ -116,7 +116,7 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
     return (
         <TableRow>
             <TableCell className="p-1 align-top"><Input defaultValue={item.fase} onChange={(e) => handleItemChange('fase', e.target.value)} className="text-center" /></TableCell>
-            <TableCell className="p-1 align-top"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="text-center w-16" /></TableCell>
+            <TableCell className="p-1 align-top"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="text-center" /></TableCell>
             <TableCell className="p-1 align-top min-w-[350px]">
                 <Textarea 
                     ref={descTextareaRef}
@@ -126,7 +126,7 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
                     rows={1}
                 />
             </TableCell>
-            <TableCell className="p-1 align-top"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center w-12" /></TableCell>
+            <TableCell className="p-1 align-top"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center w-24" /></TableCell>
             <TableCell className="p-1 align-top">
                  <Textarea 
                     ref={obsTextareaRef}
