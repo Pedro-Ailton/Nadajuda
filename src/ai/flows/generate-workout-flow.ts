@@ -10,6 +10,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { WorkoutItemSchema, WorkoutSchema } from '@/lib/schemas';
+import { googleAI } from '@genkit-ai/google-genai';
 
 // Define the input schema for the workout generation flow
 const GenerateWorkoutInputSchema = z.object({
@@ -35,6 +36,7 @@ export async function generateWorkout(input: GenerateWorkoutInput): Promise<Gene
 // Define the prompt for the AI model
 const prompt = ai.definePrompt({
   name: 'generateWorkoutPrompt',
+  model: googleAI('gemini-1.5-flash-latest'),
   input: { schema: GenerateWorkoutInputSchema },
   output: { schema: WorkoutSchema },
   prompt: `You are an expert swimming coach named "NadAjuda AI". Your task is to create a personalized swimming workout plan.
