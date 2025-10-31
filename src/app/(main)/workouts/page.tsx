@@ -113,9 +113,9 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
 
     return (
         <TableRow>
-            <TableCell className="p-1 align-top"><Input defaultValue={item.fase} onChange={(e) => handleItemChange('fase', e.target.value)} className="text-center" /></TableCell>
-            <TableCell className="p-1 align-top"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="text-center w-16" /></TableCell>
-            <TableCell className="p-1 align-top min-w-[350px]">
+            <TableCell className="p-1 align-middle"><Input defaultValue={item.fase} onChange={(e) => handleItemChange('fase', e.target.value)} className="text-center" /></TableCell>
+            <TableCell className="p-1 align-middle"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="text-center w-12" /></TableCell>
+            <TableCell className="p-1 align-middle min-w-[350px]">
                 <Textarea 
                     ref={descTextareaRef}
                     defaultValue={item.descricao} 
@@ -124,8 +124,8 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
                     rows={1}
                 />
             </TableCell>
-            <TableCell className="p-1 align-top"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center w-16" /></TableCell>
-            <TableCell className="p-1 align-top">
+            <TableCell className="p-1 align-middle"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center w-12" /></TableCell>
+            <TableCell className="p-1 align-middle">
                  <Textarea 
                     ref={obsTextareaRef}
                     defaultValue={item.observacoes} 
@@ -135,7 +135,7 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
                 />
             </TableCell>
              {Array.from({ length: maxTemposInWorkout }).map((_, i) => (
-                 <TableCell key={i} className="text-center p-1 align-top">
+                 <TableCell key={i} className="text-center p-1 align-middle">
                     {i < temposRegistradosCount ? (
                         <div className='flex items-start'>
                              <Input 
@@ -152,7 +152,7 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
                     )}
                 </TableCell>
             ))}
-            <TableCell className="text-center p-1 align-top">
+            <TableCell className="text-center p-1 align-middle">
                  <Button variant="ghost" size="icon" onClick={addRegisteredTime}><Plus className="h-4 w-4"/></Button>
             </TableCell>
         </TableRow>
