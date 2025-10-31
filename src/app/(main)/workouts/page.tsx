@@ -25,7 +25,7 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
     const firestore = useFirestore();
     const { user } = useUser();
     const descTextareaRef = React.useRef<HTMLTextAreaElement>(null);
-    const obsTextareaRef = React.useRef<HTMLTextAreaElement>(null);
+    
 
     const debouncedUpdate = useDebouncedCallback((updatedItems) => {
         if (!user || !firestore) return;
@@ -48,13 +48,6 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
         handleItemChange('descricao', e.target.value);
     };
     
-    const handleObsTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        if (e.target) {
-            e.target.style.height = 'auto';
-            e.target.style.height = `${e.target.scrollHeight}px`;
-        }
-        handleItemChange('observacoes', e.target.value);
-    };
 
     React.useEffect(() => {
         const textarea = descTextareaRef.current;
@@ -63,14 +56,6 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
             textarea.style.height = `${textarea.scrollHeight}px`;
         }
     }, [item.descricao]);
-    
-    React.useEffect(() => {
-        const textarea = obsTextareaRef.current;
-        if (textarea) {
-            textarea.style.height = 'auto';
-            textarea.style.height = `${textarea.scrollHeight}px`;
-        }
-    }, [item.observacoes]);
 
 
     const handleTimeChange = (timeIndex: number, value: string) => {
@@ -124,14 +109,12 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
                     rows={1}
                 />
             </TableCell>
-            <TableCell className="p-1 align-middle"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center w-10" /></TableCell>
+            <TableCell className="p-1 align-middle"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center w-8" /></TableCell>
             <TableCell className="p-1 align-middle">
-                 <Textarea 
-                    ref={obsTextareaRef}
+                 <Input 
                     defaultValue={item.observacoes} 
-                    onChange={handleObsTextareaChange} 
-                    className="text-center min-h-[40px] resize-none overflow-hidden"
-                    rows={1}
+                    onChange={(e) => handleItemChange('observacoes', e.target.value)} 
+                    className="text-center"
                 />
             </TableCell>
              {Array.from({ length: maxTemposInWorkout }).map((_, i) => (
