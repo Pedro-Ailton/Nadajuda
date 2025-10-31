@@ -30,7 +30,9 @@ export type GenerateWorkoutOutput = z.infer<typeof WorkoutSchema>;
  * @returns A promise that resolves to a structured Workout object.
  */
 export async function generateWorkout(input: GenerateWorkoutInput): Promise<GenerateWorkoutOutput> {
-  return generateWorkoutFlow(input);
+  const result = await generateWorkoutFlow(input);
+  // The flow returns an object with an 'output' property, so we extract it.
+  return result;
 }
 
 // Define the prompt for the AI model
