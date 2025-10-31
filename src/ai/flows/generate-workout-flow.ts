@@ -9,7 +9,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { WorkoutItemSchema, WorkoutSchema } from '@/lib/schemas';
+import { WorkoutSchema } from '@/lib/schemas';
 import { googleAI } from '@genkit-ai/google-genai';
 
 // Define the input schema for the workout generation flow
@@ -30,9 +30,8 @@ export type GenerateWorkoutOutput = z.infer<typeof WorkoutSchema>;
  * @returns A promise that resolves to a structured Workout object.
  */
 export async function generateWorkout(input: GenerateWorkoutInput): Promise<GenerateWorkoutOutput> {
-  const result = await generateWorkoutFlow(input);
-  // The flow returns an object with an 'output' property, so we extract it.
-  return result;
+  // Await the flow and return its result directly.
+  return await generateWorkoutFlow(input);
 }
 
 // Define the prompt for the AI model
@@ -81,6 +80,7 @@ const generateWorkoutFlow = ai.defineFlow(
       throw new Error('Failed to generate workout from AI.');
     }
 
+    // Return the final workout object directly
     return {
       ...output,
       id: workoutData.id,
