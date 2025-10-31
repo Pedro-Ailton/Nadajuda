@@ -60,12 +60,12 @@ export default function AiWorkoutsPage() {
         title: 'Treino Gerado!',
         description: 'Um novo treino foi sugerido pela IA.',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toast({
         variant: 'destructive',
         title: 'Erro ao Gerar Treino',
-        description: 'Não foi possível gerar o treino. Tente novamente mais tarde.',
+        description: error.message || 'Não foi possível gerar o treino. Tente novamente mais tarde.',
       });
     } finally {
       setIsLoading(false);
