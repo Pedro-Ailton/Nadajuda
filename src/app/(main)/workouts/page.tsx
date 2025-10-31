@@ -24,7 +24,8 @@ import React from 'react';
 const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: WorkoutItem, itemIndex: number }) => {
     const firestore = useFirestore();
     const { user } = useUser();
-    const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+    const descTextareaRef = React.useRef<HTMLTextAreaElement>(null);
+    const obsTextareaRef = React.useRef<HTMLTextAreaElement>(null);
 
     const debouncedUpdate = useDebouncedCallback((updatedItems) => {
         if (!user || !firestore) return;
@@ -39,23 +40,37 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
         debouncedUpdate(updatedItems);
     };
 
-    const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        // Adjust height
+    const handleDescTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         if (e.target) {
             e.target.style.height = 'auto';
             e.target.style.height = `${e.target.scrollHeight}px`;
         }
-        // Save change
         handleItemChange('descricao', e.target.value);
     };
     
+    const handleObsTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        if (e.target) {
+            e.target.style.height = 'auto';
+            e.target.style.height = `${e.target.scrollHeight}px`;
+        }
+        handleItemChange('observacoes', e.target.value);
+    };
+
     React.useEffect(() => {
-        const textarea = textareaRef.current;
+        const textarea = descTextareaRef.current;
         if (textarea) {
             textarea.style.height = 'auto';
             textarea.style.height = `${textarea.scrollHeight}px`;
         }
     }, [item.descricao]);
+    
+    React.useEffect(() => {
+        const textarea = obsTextareaRef.current;
+        if (textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = `${textarea.scrollHeight}px`;
+        }
+    }, [item.observacoes]);
 
 
     const handleTimeChange = (timeIndex: number, value: string) => {
@@ -84,7 +99,6 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
         const tempos = { ...currentItem.temposRegistrados };
         delete tempos[timeIndex];
         
-        // Re-index the temposRegistrados
         const newTempos: Record<string, string> = {};
         Object.values(tempos).forEach((value, index) => {
             newTempos[index] = value;
@@ -103,15 +117,23 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
             <TableCell className="p-1 align-top"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="text-center w-16" /></TableCell>
             <TableCell className="p-1 align-top min-w-[300px]">
                 <Textarea 
-                    ref={textareaRef}
+                    ref={descTextareaRef}
                     defaultValue={item.descricao} 
-                    onChange={handleTextareaChange} 
+                    onChange={handleDescTextareaChange} 
                     className="text-left min-h-[40px] resize-none overflow-hidden"
                     rows={1}
                 />
             </TableCell>
             <TableCell className="p-1 align-top"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center w-24" /></TableCell>
-            <TableCell className="p-1 align-top"><Input defaultValue={item.observacoes} onChange={(e) => handleItemChange('observacoes', e.target.value)} className="text-center" /></TableCell>
+            <TableCell className="p-1 align-top">
+                 <Textarea 
+                    ref={obsTextareaRef}
+                    defaultValue={item.observacoes} 
+                    onChange={handleObsTextareaChange} 
+                    className="text-left min-h-[40px] resize-none overflow-hidden"
+                    rows={1}
+                />
+            </TableCell>
              {Array.from({ length: maxTemposInWorkout }).map((_, i) => (
                  <TableCell key={i} className="text-center p-1 align-top">
                     {i < temposRegistradosCount ? (
@@ -171,7 +193,6 @@ const WorkoutTable = ({ workout }: { workout: Workout }) => {
             const timeValues = Object.values(tempos);
             timeValues.splice(colIndex, 1);
             
-            // Re-index the temposRegistrados
             const newTempos: Record<string, string> = {};
             timeValues.forEach((value, index) => {
                 newTempos[index] = value;
