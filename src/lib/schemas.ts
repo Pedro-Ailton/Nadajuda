@@ -2,11 +2,11 @@ import { z } from 'zod';
 
 export const WorkoutItemSchema = z.object({
   fase: z.string().describe("Phase of the workout (e.g., 'Aquecimento', 'Série Principal', 'Relaxamento')."),
-  repeticoes: z.number().optional().describe("Number of repetitions for the set."),
-  descricao: z.string().optional().describe("Description of the set (e.g., '50m Livre')."),
-  intensidade: z.string().optional().describe("Optional intensity of the set (e.g., 'A1', 'A2', 'MAX')."),
-  observacoes: z.string().optional().describe("Optional observations, like equipment used or rest time."),
-  temposRegistrados: z.record(z.string()).optional().describe("A map of recorded times for repetitions."),
+  repeticoes: z.number().describe("Number of repetitions for the set. Should be 0 if not applicable."),
+  descricao: z.string().describe("Description of the set (e.g., '50m Livre'). Should be an empty string if not applicable."),
+  intensidade: z.string().describe("Optional intensity of the set (e.g., 'A1', 'A2', 'MAX'). Should be an empty string if not applicable."),
+  observacoes: z.string().describe("Optional observations, like equipment used or rest time. Should be an empty string if not applicable."),
+  temposRegistrados: z.record(z.string()).describe("A map of recorded times for repetitions. Should be an empty object if not applicable."),
 });
 
 export const WorkoutSchema = z.object({
