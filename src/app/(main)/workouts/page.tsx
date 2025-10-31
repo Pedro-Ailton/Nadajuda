@@ -100,8 +100,8 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
     return (
         <TableRow>
             <TableCell className="p-1 align-top"><Input defaultValue={item.fase} onChange={(e) => handleItemChange('fase', e.target.value)} className="text-center" /></TableCell>
-            <TableCell className="p-1 align-top"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="text-center w-20" /></TableCell>
-            <TableCell className="p-1 align-top">
+            <TableCell className="p-1 align-top"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="text-center w-16" /></TableCell>
+            <TableCell className="p-1 align-top min-w-[300px]">
                 <Textarea 
                     ref={textareaRef}
                     defaultValue={item.descricao} 
@@ -110,7 +110,7 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
                     rows={1}
                 />
             </TableCell>
-            <TableCell className="p-1 align-top"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center" /></TableCell>
+            <TableCell className="p-1 align-top"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center w-24" /></TableCell>
             <TableCell className="p-1 align-top"><Input defaultValue={item.observacoes} onChange={(e) => handleItemChange('observacoes', e.target.value)} className="text-center" /></TableCell>
              {Array.from({ length: maxTemposInWorkout }).map((_, i) => (
                  <TableCell key={i} className="text-center p-1 align-top">
@@ -192,7 +192,7 @@ const WorkoutTable = ({ workout }: { workout: Workout }) => {
                     <TableRow>
                         <TableHead className="text-center bg-muted text-muted-foreground">Fase</TableHead>
                         <TableHead className="text-center bg-muted text-muted-foreground">Repetições</TableHead>
-                        <TableHead className="text-center bg-muted text-muted-foreground">Descrição</TableHead>
+                        <TableHead className="text-center bg-muted text-muted-foreground min-w-[300px]">Descrição</TableHead>
                         <TableHead className="text-center bg-muted text-muted-foreground">Intensidade</TableHead>
                         <TableHead className="text-center bg-muted text-muted-foreground">Obs.</TableHead>
                         {Array.from({ length: maxTempos }).map((_, i) => (
