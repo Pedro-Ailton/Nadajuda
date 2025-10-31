@@ -18,6 +18,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
 import { useDebouncedCallback } from 'use-debounce';
+import { Textarea } from '@/components/ui/textarea';
+import React from 'react';
 
 const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: WorkoutItem, itemIndex: number }) => {
     const firestore = useFirestore();
@@ -34,6 +36,14 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
         const updatedItems = [...workout.workoutItems];
         updatedItems[itemIndex] = { ...updatedItems[itemIndex], [field]: value };
         debouncedUpdate(updatedItems);
+    };
+
+    const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        // Adjust height
+        e.target.style.height = 'auto';
+        e.target.style.height = `${e.target.scrollHeight}px`;
+        // Save change
+        handleItemChange('descricao', e.target.value);
     };
 
     const handleTimeChange = (timeIndex: number, value: string) => {
@@ -79,7 +89,14 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
         <TableRow>
             <TableCell className="text-center p-1"><Input defaultValue={item.fase} onChange={(e) => handleItemChange('fase', e.target.value)} className="text-center" /></TableCell>
             <TableCell className="text-center p-1"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="text-center" /></TableCell>
-            <TableCell className="text-center p-1 min-w-[300px]"><Input defaultValue={item.descricao} onChange={(e) => handleItemChange('descricao', e.target.value)} className="text-center" /></TableCell>
+            <TableCell className="text-center p-1 min-w-[300px]">
+                <Textarea 
+                    defaultValue={item.descricao} 
+                    onChange={handleTextareaChange} 
+                    className="text-center min-h-[40px] resize-none overflow-hidden"
+                    rows={1}
+                />
+            </TableCell>
             <TableCell className="text-center p-1"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center" /></TableCell>
             <TableCell className="text-center p-1"><Input defaultValue={item.observacoes} onChange={(e) => handleItemChange('observacoes', e.target.value)} className="text-center" /></TableCell>
              {Array.from({ length: maxTemposInWorkout }).map((_, i) => (
@@ -138,11 +155,12 @@ const WorkoutTable = ({ workout }: { workout: Workout }) => {
         
         const updatedItems = workout.workoutItems.map(item => {
             const tempos = { ...item.temposRegistrados };
-            delete tempos[colIndex];
+            const timeValues = Object.values(tempos);
+            timeValues.splice(colIndex, 1);
             
             // Re-index the temposRegistrados
             const newTempos: Record<string, string> = {};
-            Object.values(tempos).forEach((value, index) => {
+            timeValues.forEach((value, index) => {
                 newTempos[index] = value;
             });
             
@@ -240,3 +258,5 @@ export default function WorkoutsPage() {
     </div>
   );
 }
+
+    
