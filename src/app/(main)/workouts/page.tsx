@@ -54,8 +54,26 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
         updatedItems[itemIndex] = { ...currentItem, temposRegistrados: updatedTimes };
         debouncedUpdate(updatedItems);
     }
+
+    const handleDeleteTimeEntry = (timeIndex: number) => {
+        if (!workout.workoutItems) return;
+        const updatedItems = [...workout.workoutItems];
+        const currentItem = updatedItems[itemIndex];
+        const tempos = { ...currentItem.temposRegistrados };
+        delete tempos[timeIndex];
+        
+        // Re-index the temposRegistrados
+        const newTempos: Record<string, string> = {};
+        Object.values(tempos).forEach((value, index) => {
+            newTempos[index] = value;
+        });
+
+        updatedItems[itemIndex] = { ...currentItem, temposRegistrados: newTempos };
+        debouncedUpdate(updatedItems);
+    }
     
     const temposRegistradosCount = Object.keys(item.temposRegistrados || {}).length;
+    const maxTemposInWorkout = workout.workoutItems?.reduce((max, item) => Math.max(max, Object.keys(item.temposRegistrados || {}).length), 0) || 0;
 
     return (
         <TableRow>
@@ -64,13 +82,22 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
             <TableCell className="text-center p-1"><Input defaultValue={item.descricao} onChange={(e) => handleItemChange('descricao', e.target.value)} className="text-center" /></TableCell>
             <TableCell className="text-center p-1"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center" /></TableCell>
             <TableCell className="text-center p-1"><Input defaultValue={item.observacoes} onChange={(e) => handleItemChange('observacoes', e.target.value)} className="text-center" /></TableCell>
-             {Array.from({ length: temposRegistradosCount }).map((_, i) => (
-                 <TableCell key={i} className="text-center p-1">
-                    <Input 
-                        defaultValue={item.temposRegistrados?.[i] || ''}
-                        onChange={(e) => handleTimeChange(i, e.target.value)}
-                        className="text-center" 
-                    />
+             {Array.from({ length: maxTemposInWorkout }).map((_, i) => (
+                 <TableCell key={i} className="text-center p-1 align-top">
+                    {i < temposRegistradosCount ? (
+                        <div className='flex items-start'>
+                             <Input 
+                                defaultValue={item.temposRegistrados?.[i] || ''}
+                                onChange={(e) => handleTimeChange(i, e.target.value)}
+                                className="text-center" 
+                            />
+                             <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleDeleteTimeEntry(i)}>
+                                <Trash2 className="h-4 w-4 text-destructive/70" />
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="h-10" /> 
+                    )}
                 </TableCell>
             ))}
             <TableCell className="text-center p-1">
@@ -83,6 +110,13 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
 const WorkoutTable = ({ workout }: { workout: Workout }) => {
     const { user } = useUser();
     const firestore = useFirestore();
+
+    const debouncedUpdate = useDebouncedCallback((updatedItems) => {
+        if (!user || !firestore) return;
+        const workoutRef = doc(firestore, 'users', user.uid, 'workouts', workout.id);
+        updateDoc(workoutRef, { workoutItems: updatedItems });
+    }, 1000);
+
 
     const addNewRow = () => {
         if (!user || !firestore) return;
@@ -98,6 +132,25 @@ const WorkoutTable = ({ workout }: { workout: Workout }) => {
         const updatedItems = [...(workout.workoutItems || []), newWorkoutItem];
         updateDoc(workoutRef, { workoutItems: updatedItems });
     };
+
+    const handleDeleteTimeColumn = (colIndex: number) => {
+        if (!workout.workoutItems) return;
+        
+        const updatedItems = workout.workoutItems.map(item => {
+            const tempos = { ...item.temposRegistrados };
+            delete tempos[colIndex];
+            
+            // Re-index the temposRegistrados
+            const newTempos: Record<string, string> = {};
+            Object.values(tempos).forEach((value, index) => {
+                newTempos[index] = value;
+            });
+            
+            return { ...item, temposRegistrados: newTempos };
+        });
+
+        debouncedUpdate(updatedItems);
+    }
     
     const maxTempos = workout.workoutItems?.reduce((max, item) => Math.max(max, Object.keys(item.temposRegistrados || {}).length), 0) || 1;
 
@@ -112,7 +165,14 @@ const WorkoutTable = ({ workout }: { workout: Workout }) => {
                         <TableHead className="text-center bg-muted text-muted-foreground">Intensidade</TableHead>
                         <TableHead className="text-center bg-muted text-muted-foreground">Obs.</TableHead>
                         {Array.from({ length: maxTempos }).map((_, i) => (
-                            <TableHead key={i} className="text-center bg-muted text-muted-foreground">{i+1}º Tempo Registrado</TableHead>
+                            <TableHead key={i} className="text-center bg-muted text-muted-foreground">
+                                <div className='flex items-center justify-center gap-1'>
+                                    <span>{i+1}º Tempo</span>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDeleteTimeColumn(i)}>
+                                        <Trash2 className="h-3 w-3 text-destructive/70" />
+                                    </Button>
+                                </div>
+                            </TableHead>
                         ))}
                         <TableHead className="text-center bg-muted text-muted-foreground">Ações</TableHead>
                     </TableRow>
