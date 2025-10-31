@@ -21,6 +21,7 @@ import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { generateWorkout, type GenerateWorkoutInput } from '@/ai/flows/generate-workout-flow';
 
 export default function AiWorkoutsPage() {
   const { toast } = useToast();
@@ -32,31 +33,43 @@ export default function AiWorkoutsPage() {
 
   const handleGenerateWorkout = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!user) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro de Autenticação',
+        description: 'Você precisa estar logado para gerar um treino.',
+      });
+      return;
+    }
+
     setIsLoading(true);
     setGeneratedWorkout(null);
 
-    // Placeholder for AI logic
-    setTimeout(() => {
-        const workout: Workout = {
-            id: `ai-${Date.now()}`,
-            name: 'Treino de Velocidade (Gerado por IA)',
-            date: new Date().toISOString(),
-            userProfileId: user?.uid || '',
-            workoutItems: [
-                { fase: 'Aquecimento', repeticoes: 1, descricao: '400m Livre, leve', intensidade: 'A1', observacoes: 'Respiração 3x1', temposRegistrados: {} },
-                { fase: 'Educativos', repeticoes: 8, descricao: '25m Palmateio', intensidade: 'A1', observacoes: 'Foco na técnica', temposRegistrados: {} },
-                { fase: 'Série Principal', repeticoes: 10, descricao: '50m Livre, forte', intensidade: 'A2', observacoes: 'Sair a cada 1:00', temposRegistrados: {} },
-                { fase: 'Série Principal', repeticoes: 4, descricao: '25m Borboleta, MÁX', intensidade: 'MAX', observacoes: 'Sair a cada 45s', temposRegistrados: {} },
-                { fase: 'Relaxamento', repeticoes: 1, descricao: '200m Costas, solto', intensidade: 'A0', observacoes: 'Alongar bem', temposRegistrados: {} },
-            ]
-        };
+    const formData = new FormData(event.currentTarget);
+    const input: GenerateWorkoutInput = {
+      objective: formData.get('objective') as string,
+      duration: Number(formData.get('duration')),
+      focus: formData.get('focus') as string,
+      userProfileId: user.uid,
+    };
+
+    try {
+      const workout = await generateWorkout(input);
       setGeneratedWorkout(workout);
-      setIsLoading(false);
       toast({
         title: 'Treino Gerado!',
         description: 'Um novo treino foi sugerido pela IA.',
       });
-    }, 2000);
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao Gerar Treino',
+        description: 'Não foi possível gerar o treino. Tente novamente mais tarde.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSaveWorkout = () => {
@@ -69,6 +82,7 @@ export default function AiWorkoutsPage() {
       'workouts'
     );
 
+    // The generated workout object already matches the Firestore schema.
     addDocumentNonBlocking(workoutsCollection, generatedWorkout);
 
     toast({
@@ -95,7 +109,7 @@ export default function AiWorkoutsPage() {
           <CardContent className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="objective">Objetivo Principal</Label>
-              <Select name="objective" defaultValue="velocidade">
+              <Select name="objective" defaultValue="velocidade" required>
                 <SelectTrigger id="objective">
                   <SelectValue placeholder="Selecione um objetivo" />
                 </SelectTrigger>
@@ -109,7 +123,7 @@ export default function AiWorkoutsPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="duration">Duração (minutos)</Label>
-              <Input id="duration" name="duration" type="number" defaultValue="60" placeholder="Ex: 60" />
+              <Input id="duration" name="duration" type="number" defaultValue="60" placeholder="Ex: 60" required />
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="focus">Foco Adicional</Label>
@@ -146,6 +160,7 @@ export default function AiWorkoutsPage() {
                                 <TableHead>Repetições</TableHead>
                                 <TableHead>Descrição</TableHead>
                                 <TableHead>Intensidade</TableHead>
+                                <TableHead>Observações</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -155,6 +170,7 @@ export default function AiWorkoutsPage() {
                                     <TableCell>{item.repeticoes}</TableCell>
                                     <TableCell>{item.descricao}</TableCell>
                                     <TableCell>{item.intensidade}</TableCell>
+                                    <TableCell>{item.observacoes}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
