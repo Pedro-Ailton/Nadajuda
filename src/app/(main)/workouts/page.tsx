@@ -87,8 +87,8 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
 
     return (
         <TableRow>
-            <TableCell className="text-center p-1 min-w-[120px]"><Input defaultValue={item.fase} onChange={(e) => handleItemChange('fase', e.target.value)} className="text-center w-auto" /></TableCell>
-            <TableCell className="text-center p-1 min-w-[80px]"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="text-center w-auto" /></TableCell>
+            <TableCell className="text-center p-1"><Input defaultValue={item.fase} onChange={(e) => handleItemChange('fase', e.target.value)} className="text-center" /></TableCell>
+            <TableCell className="text-center p-1"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="text-center" /></TableCell>
             <TableCell className="text-center p-1 min-w-[300px]">
                 <Textarea 
                     defaultValue={item.descricao} 
@@ -97,16 +97,16 @@ const WorkoutRow = ({ workout, item, itemIndex }: { workout: Workout, item: Work
                     rows={1}
                 />
             </TableCell>
-            <TableCell className="text-center p-1 min-w-[100px]"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center w-auto" /></TableCell>
-            <TableCell className="text-center p-1 min-w-[150px]"><Input defaultValue={item.observacoes} onChange={(e) => handleItemChange('observacoes', e.target.value)} className="text-center w-auto" /></TableCell>
+            <TableCell className="text-center p-1"><Input defaultValue={item.intensidade} onChange={(e) => handleItemChange('intensidade', e.target.value)} className="text-center" /></TableCell>
+            <TableCell className="text-center p-1"><Input defaultValue={item.observacoes} onChange={(e) => handleItemChange('observacoes', e.target.value)} className="text-center" /></TableCell>
              {Array.from({ length: maxTemposInWorkout }).map((_, i) => (
-                 <TableCell key={i} className="text-center p-1 align-top min-w-[140px]">
+                 <TableCell key={i} className="text-center p-1 align-top">
                     {i < temposRegistradosCount ? (
                         <div className='flex items-start'>
                              <Input 
                                 defaultValue={item.temposRegistrados?.[i] || ''}
                                 onChange={(e) => handleTimeChange(i, e.target.value)}
-                                className="text-center w-auto" 
+                                className="text-center" 
                             />
                              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleDeleteTimeEntry(i)}>
                                 <Trash2 className="h-4 w-4 text-destructive/70" />
