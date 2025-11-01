@@ -50,13 +50,16 @@ service cloud.firestore {
       function isOwner(userId) {
         return isSignedIn() && request.auth.uid == userId;
       }
+      function isNewOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
       function isExistingOwner(userId) {
         return isOwner(userId) && resource != null;
       }
 
       allow get: if isOwner(userId);
       allow list: if false;
-      allow create: if isOwner(userId);
+      allow create: if isNewOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
