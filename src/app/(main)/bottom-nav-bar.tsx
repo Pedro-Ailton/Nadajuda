@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Flame, Trophy, User, Bot, LogOut } from 'lucide-react';
+import { Home, Flame, Trophy, User, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -10,7 +10,6 @@ import { ThemeToggle } from '@/components/theme-toggle';
 const menuItems = [
   { href: '/dashboard', label: 'Painel', icon: Home },
   { href: '/workouts', label: 'Treinos', icon: Flame },
-  // { href: '/ai-workouts', label: 'Treino IA', icon: Bot }, // Temporarily disabled
   { href: '/competitions', label: 'Competições', icon: Trophy },
   { href: '/profile', label: 'Perfil', icon: User },
 ];
