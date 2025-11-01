@@ -1,30 +1,28 @@
 'use client';
 
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarFooter,
-  SidebarInset,
-  SidebarTrigger,
-  SidebarRail,
-} from '@/components/ui/sidebar';
-import { Logo } from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { NavMenu } from '@/components/nav-menu';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { getAuth, signOut } from 'firebase/auth';
 import { LogOut } from 'lucide-react';
+import { BottomNavBar } from './bottom-nav-bar';
 
 function Header() {
+  const handleSignOut = async () => {
+    const auth = getAuth();
+    await signOut(auth);
+  };
   return (
     <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-md">
-      <SidebarTrigger />
       <div className="flex-1" />
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
+        <Button variant="ghost" size="icon" onClick={handleSignOut} aria-label="Sair">
+          <LogOut />
+        </Button>
+      </div>
     </header>
   );
 }
@@ -59,29 +57,12 @@ export default function MainLayout({
   }
 
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarRail />
-        <SidebarHeader>
-          <Logo />
-        </SidebarHeader>
-        <SidebarContent>
-          <NavMenu />
-        </SidebarContent>
-        <SidebarFooter>
-          <div className='flex flex-col gap-2'>
-            <Button variant="ghost" className="w-full justify-start gap-2 px-2" onClick={handleSignOut}>
-                <LogOut/>
-                <span>Sair</span>
-            </Button>
-            <ThemeToggle />
-          </div>
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset>
-        <Header />
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <main className="flex-1 pb-20"> 
         {children}
-      </SidebarInset>
-    </SidebarProvider>
+      </main>
+      <BottomNavBar onSignOut={handleSignOut} />
+    </div>
   );
 }

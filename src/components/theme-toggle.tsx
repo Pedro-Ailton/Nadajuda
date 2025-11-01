@@ -21,13 +21,10 @@ export function ThemeToggle() {
         <Button
           variant="ghost"
           size="icon"
-          className="w-full justify-start gap-2 px-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          aria-label="Alternar tema"
         >
           <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          <span className="group-data-[collapsible=icon]:hidden">
-            Alternar tema
-          </span>
           <span className="sr-only">Alternar tema</span>
         </Button>
       </DropdownMenuTrigger>

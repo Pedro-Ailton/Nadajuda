@@ -4,7 +4,7 @@ import axios from 'axios';
 const HUGGINGFACE_API_URL = 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2';
 const API_KEY = process.env.HUGGINGFACE_API_KEY;
 
-// Função que conversa com a IA
+// Função que conversa com a IA  
 export async function gerarTreinoNatacao(
   situacaoAtual: string,
   objetivoMelhoria: string
