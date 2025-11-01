@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, collection, addDoc } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { doc, collection, addDoc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Bot, Loader2, Save } from 'lucide-react';
 import type { UserProfile, Workout } from '@/lib/types';
@@ -41,13 +41,6 @@ export default function AiWorkoutsPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   
-  const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
-
-  const { data: userProfile, isLoading: isLoadingProfile } = useDoc<UserProfile>(userDocRef);
-
   const [isLoading, setIsLoading] = useState(false);
   const [generatedWorkout, setGeneratedWorkout] = useState<GenerateWorkoutOutput | null>(null);
 
@@ -56,30 +49,49 @@ export default function AiWorkoutsPage() {
   });
 
   const onSubmit = async (data: FormData) => {
-    if (!userProfile) {
+    if (!user || !firestore) {
         toast({
             variant: 'destructive',
             title: 'Erro',
-            description: 'Não foi possível carregar o seu perfil. Tente novamente.',
+            description: 'Utilizador não autenticado. Por favor, faça login novamente.',
         });
         return;
     }
     
-    const age = calculateAge(userProfile.dateOfBirth);
-    if (!age) {
-        toast({
-            variant: 'destructive',
-            title: 'Perfil Incompleto',
-            description: 'Por favor, adicione sua data de nascimento no seu perfil para gerar um treino.',
-        });
-        return;
-    }
-
     setIsLoading(true);
     setGeneratedWorkout(null);
+
     try {
+        // Fetch profile on demand
+        const userDocRef = doc(firestore, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) {
+            toast({
+                variant: 'destructive',
+                title: 'Erro',
+                description: 'Não foi possível carregar o seu perfil. Tente novamente.',
+            });
+            setIsLoading(false);
+            return;
+        }
+
+        const userProfile = userDoc.data() as UserProfile;
+        const age = calculateAge(userProfile.dateOfBirth);
+
+        if (!age) {
+            toast({
+                variant: 'destructive',
+                title: 'Perfil Incompleto',
+                description: 'Por favor, adicione sua data de nascimento no seu perfil para gerar um treino.',
+            });
+            setIsLoading(false);
+            return;
+        }
+
         const result = await generateWorkout({ ...data, userAge: age });
         setGeneratedWorkout(result);
+
     } catch (error) {
         console.error(error);
         toast({
@@ -163,9 +175,9 @@ export default function AiWorkoutsPage() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit" disabled={isLoading || isLoadingProfile}>
+            <Button type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLoading ? 'Gerando Treino...' : (isLoadingProfile ? 'Carregando Perfil...' : 'Gerar Treino')}
+              {isLoading ? 'Gerando Treino...' : 'Gerar Treino'}
             </Button>
           </CardFooter>
         </form>
