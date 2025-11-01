@@ -1,7 +1,5 @@
-
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
-
 import 'dotenv/config';
 
 // Initialize Genkit and the Google AI plugin.
