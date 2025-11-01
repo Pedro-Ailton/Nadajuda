@@ -5,5 +5,5 @@ import 'dotenv/config';
 // Initialize Genkit and the Google AI plugin.
 // This `ai` object will be used throughout the application to interact with AI models.
 export const ai = genkit({
-  plugins: [googleAI()],
+  plugins: [googleAI({ apiKey: process.env.GEMINI_API_KEY })],
 });
