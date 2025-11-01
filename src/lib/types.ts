@@ -1,3 +1,6 @@
+import { z } from 'zod';
+import { GenerateWorkoutInputSchema, GenerateWorkoutOutputSchema } from './schemas';
+
 export type Competition = {
   id: string;
   event: string;
@@ -46,3 +49,6 @@ export type Event = {
     distance: number;
     stroke: string;
 }
+
+export type GenerateWorkoutInput = z.infer<typeof GenerateWorkoutInputSchema>;
+export type GenerateWorkoutOutput = z.infer<typeof GenerateWorkoutOutputSchema>;

@@ -3,27 +3,11 @@
  * @fileOverview An AI flow for generating personalized swimming workouts.
  *
  * - generateWorkout - A function that handles the workout generation process.
- * - GenerateWorkoutInput - The input type for the generateWorkout function.
- * - GenerateWorkoutOutput - The return type for the generateWorkout function.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
-import { WorkoutItemSchema, WorkoutSchema } from '@/lib/schemas';
-
-export const GenerateWorkoutInputSchema = z.object({
-  currentSituation: z.string().describe("The user's current situation or fitness level."),
-  improvementGoals: z.string().describe("What the user wants to improve."),
-  userAge: z.number().describe('The age of the user.'),
-});
-export type GenerateWorkoutInput = z.infer<typeof GenerateWorkoutInputSchema>;
-
-// The output will be a simplified workout structure, as the full workout object will be constructed on the client.
-export const GenerateWorkoutOutputSchema = z.object({
-    name: z.string().describe("A creative and descriptive name for the generated workout session (e.g., 'Resilience Build-up', 'Sprint Power')."),
-    workoutItems: z.array(WorkoutItemSchema).describe("An array of workout items that make up the session. It should contain between 5 and 10 items, covering warm-up, main set, and cool-down."),
-});
-export type GenerateWorkoutOutput = z.infer<typeof GenerateWorkoutOutputSchema>;
+import { GenerateWorkoutInputSchema, GenerateWorkoutOutputSchema } from '@/lib/schemas';
+import type { GenerateWorkoutInput, GenerateWorkoutOutput } from '@/lib/types';
 
 
 export async function generateWorkout(input: GenerateWorkoutInput): Promise<GenerateWorkoutOutput> {

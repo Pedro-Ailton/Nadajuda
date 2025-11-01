@@ -12,9 +12,8 @@ import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, collection, addDoc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Bot, Loader2, Save } from 'lucide-react';
-import type { UserProfile, Workout } from '@/lib/types';
+import type { UserProfile, Workout, GenerateWorkoutOutput } from '@/lib/types';
 import { generateWorkout } from '@/ai/flows/generate-workout-flow';
-import type { GenerateWorkoutOutput } from '@/ai/flows/generate-workout-flow';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useDoc } from '@/firebase/firestore/use-doc';
 
