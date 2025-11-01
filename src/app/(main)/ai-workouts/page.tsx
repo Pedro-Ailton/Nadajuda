@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, collection, addDoc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Bot, Loader2, Save } from 'lucide-react';
@@ -16,6 +16,7 @@ import type { UserProfile, Workout } from '@/lib/types';
 import { generateWorkout } from '@/ai/flows/generate-workout-flow';
 import type { GenerateWorkoutOutput } from '@/ai/flows/generate-workout-flow';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useDoc } from '@/firebase/firestore/use-doc';
 
 const formSchema = z.object({
   currentSituation: z.string().min(10, 'Por favor, descreva sua situação com um pouco mais de detalhe.'),
@@ -41,42 +42,39 @@ export default function AiWorkoutsPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   
-  const [isLoading, setIsLoading] = useState(false);
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [generatedWorkout, setGeneratedWorkout] = useState<GenerateWorkoutOutput | null>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      currentSituation: '',
+      improvementGoals: '',
+    },
   });
 
   const onSubmit = async (data: FormData) => {
-    if (!user || !firestore) {
+    if (!user || !userProfile) {
         toast({
             variant: 'destructive',
             title: 'Erro',
-            description: 'Utilizador não autenticado. Por favor, faça login novamente.',
+            description: 'Não foi possível carregar o seu perfil. Tente novamente.',
         });
         return;
     }
     
-    setIsLoading(true);
+    setIsGenerating(true);
     setGeneratedWorkout(null);
 
     try {
-        // Fetch profile on demand
-        const userDocRef = doc(firestore, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        if (!userDoc.exists()) {
-            toast({
-                variant: 'destructive',
-                title: 'Erro',
-                description: 'Não foi possível carregar o seu perfil. Tente novamente.',
-            });
-            setIsLoading(false);
-            return;
-        }
-
-        const userProfile = userDoc.data() as UserProfile;
         const age = calculateAge(userProfile.dateOfBirth);
 
         if (!age) {
@@ -85,7 +83,7 @@ export default function AiWorkoutsPage() {
                 title: 'Perfil Incompleto',
                 description: 'Por favor, adicione sua data de nascimento no seu perfil para gerar um treino.',
             });
-            setIsLoading(false);
+            setIsGenerating(false);
             return;
         }
 
@@ -100,14 +98,14 @@ export default function AiWorkoutsPage() {
             description: 'Houve um problema ao comunicar com a IA. Por favor, tente novamente.',
         });
     } finally {
-        setIsLoading(false);
+        setIsGenerating(false);
     }
   };
 
   const handleSaveWorkout = async () => {
     if (!generatedWorkout || !user || !firestore) return;
     
-    setIsLoading(true);
+    setIsSaving(true);
     try {
       const workoutsCollection = collection(firestore, 'users', user.uid, 'workouts');
       
@@ -133,9 +131,11 @@ export default function AiWorkoutsPage() {
         description: 'Não foi possível salvar o treino. Tente novamente.',
       });
     } finally {
-        setIsLoading(false);
+        setIsSaving(false);
     }
   };
+
+  const isLoading = isGenerating || isSaving || isProfileLoading;
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
@@ -148,7 +148,7 @@ export default function AiWorkoutsPage() {
         <CardHeader>
           <CardTitle>Crie seu Treino Personalizado</CardTitle>
           <CardDescription>
-            Descreva sua condição física atual e seus objetivos para que a nossa IA crie o treino perfeito para você. A sua idade será usada para ajustar o treino.
+            Descreva sua condição física atual e seus objetivos para que a nossa IA crie o treino perfeito para você. A sua idade, guardada no seu perfil, será usada para ajustar o treino.
           </CardDescription>
         </CardHeader>
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -160,6 +160,7 @@ export default function AiWorkoutsPage() {
                 placeholder="Ex: Sou um nadador iniciante, nado 2 vezes por semana. Tenho dificuldade em manter o ritmo em distâncias longas."
                 {...form.register('currentSituation')}
                 className="min-h-[100px]"
+                disabled={isLoading}
               />
               {form.formState.errors.currentSituation && <p className="text-sm text-destructive">{form.formState.errors.currentSituation.message}</p>}
             </div>
@@ -170,14 +171,15 @@ export default function AiWorkoutsPage() {
                 placeholder="Ex: Quero melhorar minha resistência para conseguir nadar 1500m sem parar. Também quero aperfeiçoar minha técnica de nado crawl."
                 {...form.register('improvementGoals')}
                 className="min-h-[100px]"
+                disabled={isLoading}
               />
               {form.formState.errors.improvementGoals && <p className="text-sm text-destructive">{form.formState.errors.improvementGoals.message}</p>}
             </div>
           </CardContent>
           <CardFooter>
             <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLoading ? 'Gerando Treino...' : 'Gerar Treino'}
+              {isProfileLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isProfileLoading ? 'Carregando perfil...' : (isGenerating ? 'Gerando Treino...' : 'Gerar Treino')}
             </Button>
           </CardFooter>
         </form>
@@ -217,7 +219,7 @@ export default function AiWorkoutsPage() {
             </CardContent>
             <CardFooter className="justify-end">
                 <Button onClick={handleSaveWorkout} disabled={isLoading}>
-                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                     Salvar Treino
                 </Button>
             </CardFooter>
