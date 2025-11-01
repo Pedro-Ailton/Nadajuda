@@ -3,7 +3,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
 import "./globals.css";
-import { Alegreya, Belleza } from 'next/font/google';
+import { Alegreya } from 'next/font/google';
 
 export const metadata: Metadata = {
   title: "NadAjuda",
@@ -16,20 +16,13 @@ const alegreya = Alegreya({
   variable: '--font-alegreya',
 });
 
-const belleza = Belleza({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-belleza',
-  weight: '400',
-});
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning className={`${alegreya.variable} ${belleza.variable}`}>
+    <html lang="pt-BR" suppressHydrationWarning className={`${alegreya.variable}`}>
       <head />
       <body className="font-body antialiased">
         <ThemeProvider
