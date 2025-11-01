@@ -8,75 +8,34 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader, AlertCircle } from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
-import { format, parseISO, isValid } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { generateWorkoutFlow, type GenerateWorkoutInput, type GenerateWorkoutOutput } from '@/ai/flows/generate-workout-flow';
+import { gerarTreinoNatacao } from '@/services/aiService';
 
-// Types
 interface WorkoutError {
   message: string;
-  code?: string;
   details?: string;
 }
 
 export default function AiWorkoutsPage() {
   const { toast } = useToast();
-  const { user } = useUser();
-  const firestore = useFirestore();
-
   const [isLoading, setIsLoading] = useState(false);
-  const [generatedWorkout, setGeneratedWorkout] = useState<GenerateWorkoutOutput | null>(null);
+  const [generatedWorkout, setGeneratedWorkout] = useState<string | null>(null);
   const [error, setError] = useState<WorkoutError | null>(null);
-
-  // Helper function to format date safely
-  const formatDate = (dateString: string): string => {
-    try {
-      const date = parseISO(dateString);
-      if (isValid(date)) {
-        return format(date, "PPP", { locale: ptBR });
-      }
-      return 'Data inválida';
-    } catch {
-      return 'Data inválida';
-    }
-  };
 
   const handleGenerateWorkout = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!user) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro de Autenticação',
-        description: 'Você precisa estar logado para gerar um treino.',
-      });
-      return;
-    }
 
     setIsLoading(true);
     setGeneratedWorkout(null);
     setError(null);
 
     const formData = new FormData(event.currentTarget);
-    const input: GenerateWorkoutInput = {
-      objective: formData.get('objective') as string,
-      duration: Number(formData.get('duration')),
-      focus: (formData.get('focus') as string) || undefined,
-      userProfileId: user.uid,
-    };
+    const objective = formData.get('objective') as string;
+    const focus = (formData.get('focus') as string) || 'Geral';
+    const situacaoAtual = `Duração do treino: ${formData.get('duration')} minutos`;
 
     try {
-      const result = await generateWorkoutFlow(input);
+      const result = await gerarTreinoNatacao(situacaoAtual, `Objetivo: ${objective}, Foco: ${focus}`);
       setGeneratedWorkout(result);
       toast({
         title: 'Treino Gerado!',
@@ -96,36 +55,6 @@ export default function AiWorkoutsPage() {
       });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleSaveWorkout = async () => {
-    if (!generatedWorkout || !user || !firestore) return;
-    
-    try {
-      const workoutsCollection = collection(
-        firestore,
-        'users',
-        user.uid,
-        'workouts'
-      );
-  
-      addDocumentNonBlocking(workoutsCollection, generatedWorkout);
-  
-      toast({
-        title: 'Treino Salvo!',
-        description: 'O treino gerado foi adicionado à sua lista.',
-      });
-      setGeneratedWorkout(null);
-      setError(null);
-
-    } catch (error: any) {
-       console.error("Error saving workout:", error);
-       toast({
-        variant: 'destructive',
-        title: 'Erro ao Salvar Treino',
-        description: error.message || 'Não foi possível salvar o treino.',
-      });
     }
   };
 
@@ -176,7 +105,6 @@ export default function AiWorkoutsPage() {
         </form>
       </Card>
 
-      {/* Error Display */}
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -196,42 +124,16 @@ export default function AiWorkoutsPage() {
               <CardHeader>
                   <CardTitle>Sugestão de Treino</CardTitle>
                   <CardDescription>
-                    Aqui está o treino gerado pela IA. Pode salvá-lo para aceder mais tarde.
+                    Aqui está o treino gerado pela IA.
                   </CardDescription>
               </CardHeader>
               <CardContent>
-                 <div className="border rounded-lg p-4">
-                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold text-lg">{generatedWorkout.name}</h3>
-                        <span className="text-muted-foreground">{formatDate(generatedWorkout.date)}</span>
-                     </div>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Fase</TableHead>
-                                <TableHead>Repetições</TableHead>
-                                <TableHead>Descrição</TableHead>
-                                <TableHead>Intensidade</TableHead>
-                                <TableHead>Observações</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {generatedWorkout.workoutItems?.map((item, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>{item.fase}</TableCell>
-                                    <TableCell>{item.repeticoes}</TableCell>
-                                    <TableCell>{item.descricao}</TableCell>
-                                    <TableCell>{item.intensidade}</TableCell>
-                                    <TableCell>{item.observacoes}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                 <div className="border rounded-lg p-4 whitespace-pre-wrap font-code">
+                    {generatedWorkout}
                  </div>
               </CardContent>
               <CardFooter className="justify-end gap-2">
                 <Button variant="ghost" onClick={() => setGeneratedWorkout(null)}>Descartar</Button>
-                <Button onClick={handleSaveWorkout}>Salvar Treino</Button>
               </CardFooter>
           </Card>
       )}
