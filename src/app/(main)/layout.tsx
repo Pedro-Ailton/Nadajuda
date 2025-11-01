@@ -3,11 +3,12 @@
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { getAuth, signOut } from 'firebase/auth';
 import { LogOut } from 'lucide-react';
 import { BottomNavBar } from './bottom-nav-bar';
+import Loading from './loading';
 
 function Header() {
   const handleSignOut = async () => {
@@ -59,8 +60,10 @@ export default function MainLayout({
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="flex-1 pb-20"> 
-        {children}
+      <main className="flex-1 pb-20">
+        <Suspense fallback={<Loading />}>
+         {children}
+        </Suspense>
       </main>
       <BottomNavBar onSignOut={handleSignOut} />
     </div>
