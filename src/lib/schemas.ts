@@ -6,7 +6,7 @@ export const WorkoutItemSchema = z.object({
   descricao: z.string().describe("Description of the set (e.g., '50m Livre'). Should be an empty string if not applicable."),
   intensidade: z.string().describe("Optional intensity of the set (e.g., 'A1', 'A2', 'MAX'). Should be an empty string if not applicable."),
   observacoes: z.string().describe("Optional observations, like equipment used or rest time. Should be an empty string if not applicable."),
-  temposRegistrados: z.array(z.string()).describe("An array of recorded times for repetitions. Should be an empty array [] if not applicable."),
+  temposRegistrados: z.array(z.string()).describe("An array of recorded times for repetitions. Should be an empty array [] if not applicable.").default([]),
 });
 
 export const WorkoutSchema = z.object({
