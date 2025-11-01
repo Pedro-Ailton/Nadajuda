@@ -32,11 +32,19 @@ export function BottomNavBar({ onSignOut }: BottomNavBarProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex flex-col items-center justify-center gap-1 p-2 text-muted-foreground transition-colors hover:text-primary',
+                'flex flex-col items-center justify-center gap-1.5 p-2 text-muted-foreground transition-colors hover:text-primary',
                 isActive && 'text-primary'
               )}
             >
-              <item.icon className="h-6 w-6" />
+              <div className={cn(
+                'flex items-center justify-center rounded-full p-2 transition-colors',
+                isActive && 'bg-primary'
+              )}>
+                <item.icon className={cn(
+                  'h-6 w-6',
+                  isActive && 'text-primary-foreground'
+                  )} />
+              </div>
               <span className="text-xs font-medium">{item.label}</span>
             </Link>
           );
