@@ -49,7 +49,6 @@ export default function PersonalizePage() {
       email: user.email || '',
       dateOfBirth: date?.toISOString(),
       personalNotes: notes,
-      avatarUrl: user.photoURL || `https://picsum.photos/seed/${user.uid}/200/200`
     };
 
     const userDocRef = doc(firestore, 'users', user.uid);

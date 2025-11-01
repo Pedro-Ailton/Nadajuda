@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -132,10 +131,6 @@ export default function ProfilePage() {
                 <CardTitle>Informações Pessoais</CardTitle>
             </CardHeader>
             <CardContent className="space-y-8">
-                <div className="flex items-center gap-6">
-                    <Skeleton className="h-20 w-20 rounded-full" />
-                    <Skeleton className="h-10 w-32" />
-                </div>
                 <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
                         <Skeleton className="h-4 w-16" />
@@ -171,18 +166,6 @@ export default function ProfilePage() {
           <CardTitle>Informações Pessoais</CardTitle>
         </CardHeader>
         <CardContent className="space-y-8">
-          <div className="flex items-center gap-6">
-            <Image
-              src={userProfile?.avatarUrl || "https://picsum.photos/seed/10/200/200"}
-              alt="User Avatar"
-              width={80}
-              height={80}
-              className="rounded-full"
-              data-ai-hint="portrait person"
-            />
-            <Button variant="outline">Mudar Avatar</Button>
-          </div>
-
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Nome Completo</Label>
@@ -275,5 +258,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    

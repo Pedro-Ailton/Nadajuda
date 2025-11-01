@@ -27,11 +27,6 @@
         "personalNotes": {
           "type": "string",
           "description": "Personal notes or information provided by the user."
-        },
-        "avatarUrl": {
-          "type": "string",
-          "description": "URL for the user's avatar image.",
-          "format": "uri"
         }
       },
       "required": [
@@ -141,15 +136,20 @@
           "description": "Optional observations, like equipment used or rest time."
         },
         "temposRegistrados": {
-          "type": "object",
-          "description": "A map of recorded times for repetitions, where the key is the repetition index (as a string) and the value is the time.",
-          "additionalProperties": {
+          "type": "array",
+          "description": "An array of recorded times for repetitions, where the value is the time.",
+          "items": {
             "type": "string"
           }
         }
       },
       "required": [
-        "fase"
+        "fase",
+        "repeticoes",
+        "descricao",
+        "intensidade",
+        "observacoes",
+        "temposRegistrados"
       ]
     },
     "Event": {

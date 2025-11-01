@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader, AlertCircle } from 'lucide-react';
-import type { Workout } from '@/lib/types';
 import {
   Table,
   TableBody,
@@ -20,9 +19,40 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, addDoc } from 'firebase/firestore';
-import { format } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { generateWorkoutFlow, type GenerateWorkoutInput } from '@/ai/flows/generate-workout-flow';
+import { generateWorkoutFlow } from '@/ai/flows/generate-workout-flow';
+
+// Types
+interface WorkoutItem {
+  fase: string;
+  repeticoes: number;
+  descricao: string;
+  intensidade: string;
+  observacoes: string;
+  temposRegistrados?: any[];
+}
+
+interface Workout {
+  id: string;
+  name: string;
+  date: string;
+  userProfileId: string;
+  workoutItems: WorkoutItem[];
+}
+
+interface GenerateWorkoutInput {
+  objective: string;
+  duration: number;
+  focus?: string;
+  userProfileId: string;
+}
+
+interface WorkoutError {
+  message: string;
+  code?: string;
+  details?: string;
+}
 
 export default function AiWorkoutsPage() {
   const { toast } = useToast();
@@ -31,7 +61,20 @@ export default function AiWorkoutsPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [generatedWorkout, setGeneratedWorkout] = useState<Workout | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<WorkoutError | null>(null);
+
+  // Helper function to format date safely
+  const formatDate = (dateString: string): string => {
+    try {
+      const date = parseISO(dateString);
+      if (isValid(date)) {
+        return format(date, "PPP", { locale: ptBR });
+      }
+      return 'Data inválida';
+    } catch {
+      return 'Data inválida';
+    }
+  };
 
   const handleGenerateWorkout = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -52,26 +95,39 @@ export default function AiWorkoutsPage() {
     const input: GenerateWorkoutInput = {
       objective: formData.get('objective') as string,
       duration: Number(formData.get('duration')),
-      focus: formData.get('focus') as string,
+      focus: (formData.get('focus') as string) || undefined,
       userProfileId: user.uid,
     };
 
     try {
-      const workout = await generateWorkoutFlow(input);
-      setGeneratedWorkout(workout);
-      toast({
-        title: 'Treino Gerado!',
-        description: 'Um novo treino foi sugerido pela IA.',
-      });
-    } catch (err: any) {
-      console.error('Error generating workout:', err);
-      const errorMessage = err.message || 'Não foi possível gerar o treino. Tente novamente mais tarde.';
-      setError(errorMessage);
+      const result = await generateWorkoutFlow(input);
       
+      if (result.success) {
+        setGeneratedWorkout(result.data);
+        toast({
+          title: 'Treino Gerado!',
+          description: 'Um novo treino foi sugerido pela IA.',
+        });
+      } else {
+        setError(result.error);
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao Gerar Treino',
+          description: result.error.message,
+        });
+      }
+    } catch (err: any) {
+      console.error('Unexpected error:', err);
+      const errorInfo: WorkoutError = {
+        message: 'Erro inesperado',
+        code: 'UNEXPECTED',
+        details: err?.message || 'Erro desconhecido'
+      };
+      setError(errorInfo);
       toast({
         variant: 'destructive',
         title: 'Erro ao Gerar Treino',
-        description: errorMessage,
+        description: errorInfo.message,
       });
     } finally {
       setIsLoading(false);
@@ -105,6 +161,22 @@ export default function AiWorkoutsPage() {
         title: 'Erro ao Salvar Treino',
         description: error.message || 'Não foi possível salvar o treino.',
       });
+    }
+  };
+
+  const getErrorIcon = (code?: string) => {
+    switch (code) {
+      case 'MISSING_API_KEY':
+      case 'INVALID_API_KEY':
+        return '🔑';
+      case 'CONNECTION_ERROR':
+        return '🌐';
+      case 'MODEL_LOADING':
+        return '⏳';
+      case 'RATE_LIMIT':
+        return '⏸️';
+      default:
+        return '⚠️';
     }
   };
 
@@ -159,10 +231,22 @@ export default function AiWorkoutsPage() {
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Ocorreu um erro</AlertTitle>
-          <AlertDescription>
-            {error}
-          </AlertDescription>
+          <AlertTitle className="flex items-center gap-2">
+            <span>{getErrorIcon(error.code)}</span>
+            {error.message}
+          </AlertTitle>
+          {error.details && (
+            <AlertDescription className="mt-2">
+              <div className="text-sm">
+                <strong>Detalhes:</strong> {error.details}
+              </div>
+              {error.code && (
+                <div className="text-xs mt-1 opacity-70">
+                  Código do erro: {error.code}
+                </div>
+              )}
+            </AlertDescription>
+          )}
         </Alert>
       )}
       
@@ -178,7 +262,7 @@ export default function AiWorkoutsPage() {
                  <div className="border rounded-lg p-4">
                      <div className="flex justify-between items-center mb-4">
                         <h3 className="font-bold text-lg">{generatedWorkout.name}</h3>
-                        <span className="text-muted-foreground">{format(new Date(generatedWorkout.date), "PPP", { locale: ptBR })}</span>
+                        <span className="text-muted-foreground">{formatDate(generatedWorkout.date)}</span>
                      </div>
                     <Table>
                         <TableHeader>

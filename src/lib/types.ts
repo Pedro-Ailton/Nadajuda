@@ -29,7 +29,6 @@ export type UserProfile = {
   dateOfBirth?: string;
   email: string;
   personalNotes?: string;
-  avatarUrl?: string;
 };
 
 export type CompetitionTime = {
