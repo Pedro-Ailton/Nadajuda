@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader } from 'lucide-react';
+import { Loader, AlertCircle } from 'lucide-react';
 import type { Workout } from '@/lib/types';
 import {
   Table,
@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import { format } from 'date-fns';
@@ -30,6 +31,7 @@ export default function AiWorkoutsPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [generatedWorkout, setGeneratedWorkout] = useState<Workout | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleGenerateWorkout = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -44,6 +46,7 @@ export default function AiWorkoutsPage() {
 
     setIsLoading(true);
     setGeneratedWorkout(null);
+    setError(null);
 
     const formData = new FormData(event.currentTarget);
     const input: GenerateWorkoutInput = {
@@ -60,12 +63,15 @@ export default function AiWorkoutsPage() {
         title: 'Treino Gerado!',
         description: 'Um novo treino foi sugerido pela IA.',
       });
-    } catch (error: any) {
-      console.error(error);
+    } catch (err: any) {
+      console.error('Error generating workout:', err);
+      const errorMessage = err.message || 'Não foi possível gerar o treino. Tente novamente mais tarde.';
+      setError(errorMessage);
+      
       toast({
         variant: 'destructive',
         title: 'Erro ao Gerar Treino',
-        description: error.message || 'Não foi possível gerar o treino. Tente novamente mais tarde.',
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -83,8 +89,6 @@ export default function AiWorkoutsPage() {
         'workouts'
       );
   
-      // The generated workout object already matches the Firestore schema.
-      // We don't need a non-blocking update here as we want to confirm it's saved.
       await addDoc(workoutsCollection, generatedWorkout);
   
       toast({
@@ -92,6 +96,7 @@ export default function AiWorkoutsPage() {
         description: 'O treino gerado foi adicionado à sua lista.',
       });
       setGeneratedWorkout(null);
+      setError(null);
 
     } catch (error: any) {
        console.error("Error saving workout:", error);
@@ -149,6 +154,17 @@ export default function AiWorkoutsPage() {
           </CardFooter>
         </form>
       </Card>
+
+      {/* Error Display */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Ocorreu um erro</AlertTitle>
+          <AlertDescription>
+            {error}
+          </AlertDescription>
+        </Alert>
+      )}
       
       {generatedWorkout && (
           <Card className="shadow-md">

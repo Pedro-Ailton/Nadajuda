@@ -10,7 +10,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { WorkoutSchema } from '@/lib/schemas';
-import { googleAI } from '@genkit-ai/google-genai';
 
 // Define the input schema for the workout generation flow
 const GenerateWorkoutInputSchema = z.object({
@@ -27,7 +26,7 @@ export type GenerateWorkoutOutput = z.infer<typeof WorkoutSchema>;
 // Define the prompt for the AI model
 const prompt = ai.definePrompt({
   name: 'generateWorkoutPrompt',
-  model: googleAI.model('gemini-1.5-flash'),
+  model: 'gemini-1.5-flash',
   input: { schema: GenerateWorkoutInputSchema },
   output: { schema: WorkoutSchema },
   prompt: `You are an expert swimming coach named "NadAjuda AI". Your task is to create a personalized swimming workout plan.
@@ -38,7 +37,10 @@ The workout name should be creative and reflect the main objective (e.g., "Explo
 
 The workout items should be detailed and follow a logical progression. The total duration of all items should be close to the user-specified duration. Use Portuguese (Brazil) for all descriptions and names.
 
-IMPORTANT: You MUST provide a value for every field in the output schema. If a field like 'intensidade' or 'observacoes' is not relevant for a specific item, provide an empty string "" instead of omitting it. For 'repeticoes', provide 0 if not applicable. For 'temposRegistrados', provide an empty array [] if not applicable.
+IMPORTANT: You MUST provide a value for every field in the output schema. 
+- If a field like 'intensidade' or 'observacoes' is not relevant for a specific item, provide an empty string "". 
+- For 'repeticoes', provide 0 if not applicable. 
+- For 'temposRegistrados', provide an empty array [] if not applicable.
 
 Workout Details:
 - Main Objective: {{{objective}}}
@@ -57,27 +59,33 @@ export const generateWorkoutFlow = ai.defineFlow(
     outputSchema: WorkoutSchema,
   },
   async (input) => {
-    // Generate a new ID and set the current date
-    const workoutData = {
-      ...input,
-      id: `ai-${Date.now()}`,
-      date: new Date().toISOString(),
-    };
+    try {
+      // Generate a new ID and set the current date
+      const workoutData = {
+        ...input,
+        id: `ai-${Date.now()}`,
+        date: new Date().toISOString(),
+      };
 
-    // Call the prompt with the enriched input data
-    const { output } = await prompt(workoutData);
+      // Call the prompt with the enriched input data
+      const { output } = await prompt(workoutData);
 
-    // Ensure the output is not null and add the final details
-    if (!output) {
-      throw new Error('Failed to generate workout from AI.');
+      // Ensure the output is not null and add the final details
+      if (!output) {
+        throw new Error('A IA não retornou um treino. Tente novamente.');
+      }
+
+      // Return the final workout object directly
+      return {
+        ...output,
+        id: workoutData.id,
+        date: workoutData.date,
+        userProfileId: input.userProfileId,
+      };
+    } catch (error) {
+      console.error('[WorkoutGenerationError]', error);
+      // Re-throw a more user-friendly error
+      throw new Error(`Ocorreu um erro ao comunicar com a IA. Verifique a sua chave de API e tente novamente. Detalhe: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
-
-    // Return the final workout object directly
-    return {
-      ...output,
-      id: workoutData.id,
-      date: workoutData.date,
-      userProfileId: input.userProfileId,
-    };
   }
 );
