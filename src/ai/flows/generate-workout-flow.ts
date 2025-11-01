@@ -8,6 +8,7 @@
  */
 
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/google-genai';
 import { z } from 'zod';
 import { WorkoutSchema } from '@/lib/schemas';
 
@@ -27,7 +28,7 @@ export type GenerateWorkoutOutput = z.infer<typeof WorkoutSchema>;
 // Define the prompt for the AI model
 const generateWorkoutPrompt = ai.definePrompt({
   name: 'generateWorkoutPrompt',
-  model: 'gemini-pro',
+  model: googleAI.model('gemini-pro'),
   input: { schema: GenerateWorkoutInputSchema },
   output: { schema: WorkoutSchema },
   prompt: `You are an expert swimming coach named "NadAjuda AI". Your task is to create a personalized swimming workout plan.
