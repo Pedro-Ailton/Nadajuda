@@ -10,6 +10,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { WorkoutSchema } from '@/lib/schemas';
+import { googleAI } from '@genkit-ai/google-genai';
 
 // Define the input schema for the workout generation flow
 const GenerateWorkoutInputSchema = z.object({
@@ -27,7 +28,7 @@ export type GenerateWorkoutOutput = z.infer<typeof WorkoutSchema>;
 // Define the prompt for the AI model
 const generateWorkoutPrompt = ai.definePrompt({
   name: 'generateWorkoutPrompt',
-  model: 'gemini-1.5-flash',
+  model: 'gemini-pro',
   input: { schema: GenerateWorkoutInputSchema },
   output: { schema: WorkoutSchema },
   prompt: `You are an expert swimming coach named "NadAjuda AI". Your task is to create a personalized swimming workout plan.
@@ -38,17 +39,19 @@ The workout name should be creative and reflect the main objective (e.g., "Explo
 
 The workout items should be detailed and follow a logical progression. The total duration of all items should be close to the user-specified duration. Use Portuguese (Brazil) for all descriptions and names.
 
-IMPORTANT: You MUST provide a value for every field in the output schema. 
-- If a field like 'intensidade' or 'observacoes' is not relevant, provide an empty string "".
-- For 'repeticoes', provide 0 if not applicable.
-- For 'temposRegistrados', provide an empty array [] if not applicable.
+IMPORTANT: You MUST provide a value for every field in the output schema.
+- 'id', 'date', and 'userProfileId' will be populated by the system, so you can ignore them.
+- For 'workoutItems', you must generate a complete array of items.
+- Inside each 'workoutItem', if a field like 'intensidade' or 'observacoes' is not relevant, provide an empty string "".
+- For 'repeticoes', provide a number.
+- For 'temposRegistrados', provide an empty array [] as it will be filled by the user.
 
 Workout Details:
 - Main Objective: {{{objective}}}
 - Total Duration: {{{duration}}} minutes
 - Additional Focus: {{{focus}}}
 
-Generate a response in the specified JSON format. You do not need to fill id, date, or userProfileId.
+Generate a response in the specified JSON format.
 `,
 });
 
