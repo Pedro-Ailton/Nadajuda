@@ -17,37 +17,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useUser, useFirestore } from '@/firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { collection } from 'firebase/firestore';
 import { format, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { generateWorkoutFlow } from '@/ai/flows/generate-workout-flow';
+import { generateWorkoutFlow, type GenerateWorkoutInput, type GenerateWorkoutOutput } from '@/ai/flows/generate-workout-flow';
 
 // Types
-interface WorkoutItem {
-  fase: string;
-  repeticoes: number;
-  descricao: string;
-  intensidade: string;
-  observacoes: string;
-  temposRegistrados?: any[];
-}
-
-interface Workout {
-  id: string;
-  name: string;
-  date: string;
-  userProfileId: string;
-  workoutItems: WorkoutItem[];
-}
-
-interface GenerateWorkoutInput {
-  objective: string;
-  duration: number;
-  focus?: string;
-  userProfileId: string;
-}
-
 interface WorkoutError {
   message: string;
   code?: string;
@@ -60,7 +36,7 @@ export default function AiWorkoutsPage() {
   const firestore = useFirestore();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [generatedWorkout, setGeneratedWorkout] = useState<Workout | null>(null);
+  const [generatedWorkout, setGeneratedWorkout] = useState<GenerateWorkoutOutput | null>(null);
   const [error, setError] = useState<WorkoutError | null>(null);
 
   // Helper function to format date safely
@@ -101,27 +77,16 @@ export default function AiWorkoutsPage() {
 
     try {
       const result = await generateWorkoutFlow(input);
-      
-      if (result.success) {
-        setGeneratedWorkout(result.data);
-        toast({
-          title: 'Treino Gerado!',
-          description: 'Um novo treino foi sugerido pela IA.',
-        });
-      } else {
-        setError(result.error);
-        toast({
-          variant: 'destructive',
-          title: 'Erro ao Gerar Treino',
-          description: result.error.message,
-        });
-      }
+      setGeneratedWorkout(result);
+      toast({
+        title: 'Treino Gerado!',
+        description: 'Um novo treino foi sugerido pela IA.',
+      });
     } catch (err: any) {
       console.error('Unexpected error:', err);
       const errorInfo: WorkoutError = {
-        message: 'Erro inesperado',
-        code: 'UNEXPECTED',
-        details: err?.message || 'Erro desconhecido'
+        message: err.message || 'Ocorreu um erro inesperado ao gerar o treino.',
+        details: err.cause?.message || undefined,
       };
       setError(errorInfo);
       toast({
@@ -145,7 +110,7 @@ export default function AiWorkoutsPage() {
         'workouts'
       );
   
-      await addDoc(workoutsCollection, generatedWorkout);
+      addDocumentNonBlocking(workoutsCollection, generatedWorkout);
   
       toast({
         title: 'Treino Salvo!',
@@ -161,22 +126,6 @@ export default function AiWorkoutsPage() {
         title: 'Erro ao Salvar Treino',
         description: error.message || 'Não foi possível salvar o treino.',
       });
-    }
-  };
-
-  const getErrorIcon = (code?: string) => {
-    switch (code) {
-      case 'MISSING_API_KEY':
-      case 'INVALID_API_KEY':
-        return '🔑';
-      case 'CONNECTION_ERROR':
-        return '🌐';
-      case 'MODEL_LOADING':
-        return '⏳';
-      case 'RATE_LIMIT':
-        return '⏸️';
-      default:
-        return '⚠️';
     }
   };
 
@@ -231,20 +180,12 @@ export default function AiWorkoutsPage() {
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle className="flex items-center gap-2">
-            <span>{getErrorIcon(error.code)}</span>
+          <AlertTitle>
             {error.message}
           </AlertTitle>
           {error.details && (
-            <AlertDescription className="mt-2">
-              <div className="text-sm">
-                <strong>Detalhes:</strong> {error.details}
-              </div>
-              {error.code && (
-                <div className="text-xs mt-1 opacity-70">
-                  Código do erro: {error.code}
-                </div>
-              )}
+            <AlertDescription className="mt-2 text-xs opacity-80">
+                {error.details}
             </AlertDescription>
           )}
         </Alert>
