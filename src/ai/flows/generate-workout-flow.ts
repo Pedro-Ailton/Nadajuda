@@ -10,7 +10,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { WorkoutSchema } from '@/lib/schemas';
-import { googleAI } from '@genkit-ai/google-genai';
 
 // Define the input schema for the workout generation flow
 const GenerateWorkoutInputSchema = z.object({
