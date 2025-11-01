@@ -1,11 +1,11 @@
 'use client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trophy, Zap, Clock } from 'lucide-react';
-import { PerformanceChart } from './performance-chart';
 import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import type { CompetitionTime } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function getMostFrequentEvents(competitions: CompetitionTime[]) {
   if (!competitions || competitions.length === 0) return [];
@@ -109,7 +109,15 @@ export default function DashboardPage() {
             <CardTitle>Análise de Performance</CardTitle>
           </CardHeader>
           <CardContent>
-            <PerformanceChart competitions={competitions || []} />
+            {isLoading ? (
+              <div className='min-h-[300px] w-full flex items-center justify-center'>
+                 <Skeleton className="h-[250px] w-full" />
+              </div>
+            ) : (
+               <div className='min-h-[300px] w-full flex items-center justify-center text-center text-muted-foreground'>
+                  <p>A funcionalidade de gráfico de performance está temporariamente indisponível. <br /> Registre novos tempos e volte em breve!</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
