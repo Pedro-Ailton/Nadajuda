@@ -7,12 +7,10 @@
  * - GenerateWorkoutOutput - The return type for the generateWorkout function, which is a structured Workout object.
  */
 
-import axios from 'axios';
+import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { WorkoutSchema } from '@/lib/schemas';
-
-const HUGGINGFACE_API_URL = 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2';
-const API_KEY = process.env.HUGGINGFACE_API_KEY;
+import { googleAI } from '@genkit-ai/google-genai';
 
 // Define the input schema for the workout generation flow
 const GenerateWorkoutInputSchema = z.object({
@@ -27,7 +25,12 @@ export type GenerateWorkoutInput = z.infer<typeof GenerateWorkoutInputSchema>;
 export type GenerateWorkoutOutput = z.infer<typeof WorkoutSchema>;
 
 // Define the prompt for the AI model
-const prompt = `You are an expert swimming coach named "NadAjuda AI". Your task is to create a personalized swimming workout plan.
+const prompt = ai.definePrompt({
+  name: 'generateWorkoutPrompt',
+  model: googleAI.model('gemini-1.5-flash'),
+  input: { schema: GenerateWorkoutInputSchema },
+  output: { schema: WorkoutSchema },
+  prompt: `You are an expert swimming coach named "NadAjuda AI". Your task is to create a personalized swimming workout plan.
 
 You will receive the user's main objective, the desired workout duration in minutes, and an optional additional focus. You must generate a complete workout session structured in phases (Warm-up, Drills, Main Set, Cool-down).
 
@@ -43,9 +46,16 @@ Workout Details:
 - Additional Focus: {{{focus}}}
 
 Generate a response in the specified JSON format. Ensure the 'userProfileId' and 'date' are set correctly. The 'id' can be a placeholder.
-`;
+`,
+});
 
-
+// Define the Genkit flow
+export const generateWorkoutFlow = ai.defineFlow(
+  {
+    name: 'generateWorkoutFlow',
+    inputSchema: GenerateWorkoutInputSchema,
+    outputSchema: WorkoutSchema,
+  },
   async (input) => {
     // Generate a new ID and set the current date
     const workoutData = {
@@ -70,4 +80,4 @@ Generate a response in the specified JSON format. Ensure the 'userProfileId' and
       userProfileId: input.userProfileId,
     };
   }
-
+);
