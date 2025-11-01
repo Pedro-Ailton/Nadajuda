@@ -6,6 +6,7 @@ import { collection, query } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import type { CompetitionTime } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PerformanceChart } from './performance-chart';
 
 function getMostFrequentEvents(competitions: CompetitionTime[]) {
   if (!competitions || competitions.length === 0) return [];
@@ -113,9 +114,11 @@ export default function DashboardPage() {
               <div className='min-h-[300px] w-full flex items-center justify-center'>
                  <Skeleton className="h-[250px] w-full" />
               </div>
+            ) : competitions && competitions.length > 0 ? (
+               <PerformanceChart data={competitions} />
             ) : (
-               <div className='min-h-[300px] w-full flex items-center justify-center text-center text-muted-foreground'>
-                  <p>A funcionalidade de gráfico de performance está temporariamente indisponível. <br /> Registre novos tempos e volte em breve!</p>
+              <div className='min-h-[300px] w-full flex items-center justify-center text-center text-muted-foreground'>
+                  <p>Registe os seus tempos de competição para ver o seu progresso aqui.</p>
               </div>
             )}
           </CardContent>
