@@ -10,7 +10,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 const menuItems = [
   { href: '/dashboard', label: 'Painel', icon: Home },
   { href: '/workouts', label: 'Treinos', icon: Flame },
-  { href: '/ai-workouts', label: 'Treino IA', icon: Bot },
+  // { href: '/ai-workouts', label: 'Treino IA', icon: Bot }, // Temporarily disabled
   { href: '/competitions', label: 'Competições', icon: Trophy },
   { href: '/profile', label: 'Perfil', icon: User },
 ];
