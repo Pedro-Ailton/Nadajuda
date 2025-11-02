@@ -185,7 +185,7 @@ export function AddCompetitionForm({ isOpen, onOpenChange }: AddCompetitionFormP
                             control={control}
                             render={({ field }) => ( <Input type="number" placeholder="0" {...field} value={field.value ?? ''} /> )}
                         />
-                        <span className="text-xs text-muted-foreground">min</span>
+                        <span className="text-xs text-muted-foreground">minutos</span>
                     </div>
                     <div className="space-y-1">
                         <Controller
@@ -193,7 +193,7 @@ export function AddCompetitionForm({ isOpen, onOpenChange }: AddCompetitionFormP
                             control={control}
                             render={({ field }) => ( <Input type="number" placeholder="00" {...field} value={field.value ?? ''} /> )}
                         />
-                         <span className="text-xs text-muted-foreground">s</span>
+                         <span className="text-xs text-muted-foreground">segundos</span>
                     </div>
                      <div className="space-y-1">
                         <Controller
@@ -201,7 +201,7 @@ export function AddCompetitionForm({ isOpen, onOpenChange }: AddCompetitionFormP
                             control={control}
                             render={({ field }) => ( <Input type="number" placeholder="00" {...field} value={field.value ?? ''} /> )}
                         />
-                         <span className="text-xs text-muted-foreground">ms</span>
+                         <span className="text-xs text-muted-foreground">milissegundos</span>
                     </div>
                 </div>
                  {errors.minutes && <p className="text-sm text-destructive">{errors.minutes.message}</p>}
