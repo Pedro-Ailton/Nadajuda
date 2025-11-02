@@ -6,8 +6,10 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { GenerateWorkoutOutputSchema } from '@/lib/schemas';
 import { z } from 'zod';
+import type { GenerateWorkoutOutput } from '@/lib/types';
+import { GenerateWorkoutOutputSchema } from '@/lib/schemas';
+
 
 const SystemPrompt = `You are a friendly and encouraging virtual swimming coach. Your name is Coach Nad.
 Your goal is to create a personalized swimming workout for the user through a conversation.
@@ -37,15 +39,20 @@ const ChatHistorySchema = z.array(
 );
 
 export async function workoutChat(history: z.infer<typeof ChatHistorySchema>, userName: string): Promise<string> {
-    const chat = ai.getTool('chat', {
+
+    const fullSystemPrompt = SystemPrompt.replace('{{userName}}', userName);
+    const messages = [
+        { role: 'system', content: fullSystemPrompt },
+        ...history
+    ];
+
+    const { text } = await ai.generate({
         model: 'googleai/gemini-1.5-flash-latest',
-        tools: [],
-        system: SystemPrompt.replace('{{userName}}', userName),
+        prompt: { messages },
         output: {
             format: 'text',
         },
     });
 
-    const response = await chat(history);
-    return response;
+    return text;
 }
