@@ -46,9 +46,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-primary p-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
        <div className="absolute top-8 left-8">
-         <Logo foregroundClass='text-primary-foreground' />
+         <Logo />
       </div>
       <Tabs defaultValue="login" className="w-full max-w-md">
         <TabsList className="grid w-full grid-cols-2">
@@ -56,10 +56,10 @@ export default function LoginPage() {
           <TabsTrigger value="signup">Criar Conta</TabsTrigger>
         </TabsList>
         <TabsContent value="login">
-          <Card className="rounded-xl">
+          <Card className="rounded-xl bg-primary text-primary-foreground">
             <CardHeader>
               <CardTitle>Bem-vindo de Volta</CardTitle>
-              <CardDescription>
+              <CardDescription className="text-primary-foreground/80">
                 Faça login na sua conta NadAjuda para continuar.
               </CardDescription>
             </CardHeader>
@@ -69,10 +69,10 @@ export default function LoginPage() {
           </Card>
         </TabsContent>
         <TabsContent value="signup">
-          <Card className="rounded-xl">
+          <Card className="rounded-xl bg-primary text-primary-foreground">
             <CardHeader>
               <CardTitle>Crie uma Conta</CardTitle>
-              <CardDescription>
+              <CardDescription className="text-primary-foreground/80">
                 Comece a usar o NadAjuda criando sua conta.
               </CardDescription>
             </CardHeader>
