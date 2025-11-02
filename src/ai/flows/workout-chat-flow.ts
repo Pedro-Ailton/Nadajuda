@@ -48,7 +48,7 @@ export async function workoutChat(history: z.infer<typeof ChatHistorySchema>, us
 
     const { text } = await ai.generate({
         model: 'googleai/gemini-1.5-flash-latest',
-        prompt: { messages },
+        prompt: messages,
         output: {
             format: 'text',
         },
