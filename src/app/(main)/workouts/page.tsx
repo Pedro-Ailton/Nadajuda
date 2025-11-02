@@ -294,41 +294,41 @@ export default function WorkoutsPage() {
              <Accordion type="single" collapsible className="w-full space-y-4">
                 {workouts.map(workout => (
                      <AccordionItem value={workout.id} key={workout.id} className="border rounded-lg shadow-md bg-card">
-                        <AccordionTrigger className="p-4 hover:no-underline">
-                            <div className="flex justify-between w-full items-center gap-4">
-                                <div className='flex-1 text-left'>
+                        <div className="flex w-full items-center gap-4 p-4">
+                            <AccordionTrigger className="flex-1 text-left p-0 hover:no-underline">
+                                <div>
                                     <span className="font-bold text-lg">{workout.name}</span>
+                                    <div className="text-muted-foreground text-sm flex-shrink-0">{new Date(workout.date).toLocaleDateString('pt-BR')}</div>
                                 </div>
-                                <span className="text-muted-foreground text-sm flex-shrink-0">{new Date(workout.date).toLocaleDateString('pt-BR')}</span>
-                                <div className="flex items-center gap-2">
-                                    <EditWorkoutForm workout={workout} />
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <Button variant="ghost" size="icon" className='h-8 w-8 flex-shrink-0' onClick={(e) => e.stopPropagation()}>
-                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                            </Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                                            <AlertDialogHeader>
-                                            <AlertDialogTitle>Tem a certeza?</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                Esta ação não pode ser desfeita. Isto irá apagar permanentemente o seu treino.
-                                            </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                            <AlertDialogAction 
-                                                onClick={() => handleDeleteWorkout(workout.id)}
-                                                className={cn(buttonVariants({ variant: "destructive" }))}
-                                            >
-                                                Apagar
-                                            </AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
-                                </div>
+                            </AccordionTrigger>
+                            <div className="flex items-center gap-2">
+                                <EditWorkoutForm workout={workout} />
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className='h-8 w-8 flex-shrink-0'>
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                        <AlertDialogTitle>Tem a certeza?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Esta ação não pode ser desfeita. Isto irá apagar permanentemente o seu treino.
+                                        </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                        <AlertDialogAction 
+                                            onClick={() => handleDeleteWorkout(workout.id)}
+                                            className={cn(buttonVariants({ variant: "destructive" }))}
+                                        >
+                                            Apagar
+                                        </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             </div>
-                        </AccordionTrigger>
+                        </div>
                         <AccordionContent>
                            <WorkoutTable workout={workout} />
                         </AccordionContent>
