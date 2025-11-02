@@ -8,7 +8,6 @@
 import { ai } from '@/ai/genkit';
 import { GenerateWorkoutInputSchema, GenerateWorkoutOutputSchema } from '@/lib/schemas';
 import type { GenerateWorkoutInput, GenerateWorkoutOutput } from '@/lib/types';
-import { googleAI } from '@genkit-ai/google-genai';
 
 
 export async function generateWorkout(input: GenerateWorkoutInput): Promise<GenerateWorkoutOutput> {
@@ -17,7 +16,7 @@ export async function generateWorkout(input: GenerateWorkoutInput): Promise<Gene
 
 const prompt = ai.definePrompt({
   name: 'generateWorkoutPrompt',
-  model: googleAI('gemini-pro'),
+  model: 'googleai/gemini-pro',
   input: { schema: GenerateWorkoutInputSchema },
   output: { schema: GenerateWorkoutOutputSchema },
   prompt: `You are a world-class swimming coach AI. Your task is to generate a personalized swimming workout plan based on the user's details.
