@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { CalendarIcon, Trash2 } from 'lucide-react';
+import { CalendarIcon, Trash2, ShieldCheck } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -33,6 +33,37 @@ import {
 import { getAuth, deleteUser } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
+function calculateCategory(dateOfBirth: Date | undefined): string {
+    if (!dateOfBirth) return 'Não definida';
+
+    const today = new Date();
+    let age = today.getFullYear() - dateOfBirth.getFullYear();
+    const m = today.getMonth() - dateOfBirth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dateOfBirth.getDate())) {
+        age--;
+    }
+
+    if (age <= 8) return 'Pré-Mirim';
+    if (age === 9) return 'Mirim 1';
+    if (age === 10) return 'Mirim 2';
+    if (age === 11) return 'Petiz 1';
+    if (age === 12) return 'Petiz 2';
+    if (age === 13) return 'Infantil 1';
+    if (age === 14) return 'Infantil 2';
+    if (age === 15) return 'Juvenil 1';
+    if (age === 16) return 'Juvenil 2';
+    if (age === 17) return 'Junior 1';
+    if (age >= 18 && age <= 19) return 'Junior 2';
+
+    if (age >= 20 && age <= 24) return 'Pré-Master (20+)';
+    if (age >= 25) {
+        const masterCategoryStart = Math.floor(age / 5) * 5;
+        return `Master ${masterCategoryStart}+`;
+    }
+
+    return 'Sênior (20+)';
+}
 
 
 export default function ProfilePage() {
@@ -163,6 +194,8 @@ export default function ProfilePage() {
     )
   }
 
+  const category = calculateCategory(date);
+
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
       <div className="flex items-center">
@@ -234,6 +267,15 @@ export default function ProfilePage() {
                     </div>
                 </RadioGroup>
             </div>
+            {category !== 'Não definida' && (
+              <div className="space-y-2">
+                  <Label>Categoria</Label>
+                  <div className="flex items-center gap-2 rounded-md border border-input bg-background/50 px-3 py-2 text-sm">
+                      <ShieldCheck className="h-5 w-5 text-primary" />
+                      <span className="font-medium">{category}</span>
+                  </div>
+              </div>
+            )}
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="notes">Notas Pessoais</Label>
               <Textarea
