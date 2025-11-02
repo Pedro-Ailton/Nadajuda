@@ -59,7 +59,7 @@ export default function PersonalizePage() {
       description: 'Suas informações foram salvas com sucesso.',
     });
     
-    router.push('/dashboard');
+    router.push('/tutorial');
     setIsLoading(false);
   };
   
@@ -86,8 +86,7 @@ export default function PersonalizePage() {
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome" />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="dob">Data de Nascimento</Label>
-                 <Popover>
+                <Label htmlFor="dob">Data de Nascimento</Label>                 <Popover>
                     <PopoverTrigger asChild>
                     <Button
                         id="dob"
