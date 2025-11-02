@@ -9,7 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, query, orderBy, updateDoc } from 'firebase/firestore';
+import { collection, doc, query, orderBy, updateDoc, deleteDoc } from 'firebase/firestore';
 import type { Workout, WorkoutItem } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AddWorkoutForm } from './add-workout-form';
@@ -20,6 +20,20 @@ import { Plus, Trash2 } from 'lucide-react';
 import { useDebouncedCallback } from 'use-debounce';
 import { Textarea } from '@/components/ui/textarea';
 import React from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { buttonVariants } from '@/components/ui/button';
 
 const WorkoutRow = ({ workout, item, itemIndex, onDelete }: { workout: Workout, item: WorkoutItem, itemIndex: number, onDelete: (index: number) => void }) => {
     const firestore = useFirestore();
@@ -234,6 +248,7 @@ const WorkoutTable = ({ workout }: { workout: Workout }) => {
 export default function WorkoutsPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
 
   const workoutsQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -241,6 +256,25 @@ export default function WorkoutsPage() {
   }, [user, firestore]);
 
   const { data: workouts, isLoading } = useCollection<Workout>(workoutsQuery);
+
+  const handleDeleteWorkout = async (workoutId: string) => {
+    if (!user || !firestore) return;
+    try {
+        const workoutRef = doc(firestore, 'users', user.uid, 'workouts', workoutId);
+        await deleteDoc(workoutRef);
+        toast({
+            title: "Treino Apagado",
+            description: "O treino foi removido com sucesso.",
+        });
+    } catch (error) {
+        console.error("Error deleting workout: ", error);
+        toast({
+            variant: "destructive",
+            title: "Erro",
+            description: "Não foi possível apagar o treino.",
+        });
+    }
+  };
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
@@ -259,10 +293,36 @@ export default function WorkoutsPage() {
              <Accordion type="single" collapsible className="w-full space-y-4">
                 {workouts.map(workout => (
                      <AccordionItem value={workout.id} key={workout.id} className="border rounded-lg shadow-md bg-card">
-                        <AccordionTrigger className="p-4">
-                            <div className="flex justify-between w-full items-center">
-                                <span className="font-bold text-lg">{workout.name}</span>
-                                <span className="text-muted-foreground">{new Date(workout.date).toLocaleDateString('pt-BR')}</span>
+                        <AccordionTrigger className="p-4 hover:no-underline">
+                            <div className="flex justify-between w-full items-center gap-4">
+                                <div className='flex-1 text-left'>
+                                    <span className="font-bold text-lg">{workout.name}</span>
+                                </div>
+                                <span className="text-muted-foreground text-sm flex-shrink-0">{new Date(workout.date).toLocaleDateString('pt-BR')}</span>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className='h-8 w-8 flex-shrink-0' onClick={(e) => e.stopPropagation()}>
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                                        <AlertDialogHeader>
+                                        <AlertDialogTitle>Tem a certeza?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Esta ação não pode ser desfeita. Isto irá apagar permanentemente o seu treino.
+                                        </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                        <AlertDialogAction 
+                                            onClick={() => handleDeleteWorkout(workout.id)}
+                                            className={cn(buttonVariants({ variant: "destructive" }))}
+                                        >
+                                            Apagar
+                                        </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             </div>
                         </AccordionTrigger>
                         <AccordionContent>
