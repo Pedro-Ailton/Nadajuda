@@ -56,10 +56,10 @@ export default function LoginPage() {
           <TabsTrigger value="signup">Criar Conta</TabsTrigger>
         </TabsList>
         <TabsContent value="login">
-          <Card className="rounded-xl bg-primary text-primary-foreground">
+          <Card>
             <CardHeader>
               <CardTitle>Bem-vindo de Volta</CardTitle>
-              <CardDescription className="text-primary-foreground/80">
+              <CardDescription>
                 Faça login na sua conta NadAjuda para continuar.
               </CardDescription>
             </CardHeader>
@@ -69,10 +69,10 @@ export default function LoginPage() {
           </Card>
         </TabsContent>
         <TabsContent value="signup">
-          <Card className="rounded-xl bg-primary text-primary-foreground">
+          <Card>
             <CardHeader>
               <CardTitle>Crie uma Conta</CardTitle>
-              <CardDescription className="text-primary-foreground/80">
+              <CardDescription>
                 Comece a usar o NadAjuda criando sua conta.
               </CardDescription>
             </CardHeader>
