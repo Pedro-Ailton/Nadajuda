@@ -34,10 +34,15 @@ import {
 
 const competitionSchema = z.object({
   eventName: z.string().min(1, 'O nome da prova é obrigatório.'),
-  time: z.coerce.number().positive('O tempo deve ser um número positivo.'),
+  minutes: z.coerce.number().min(0).optional().default(0),
+  seconds: z.coerce.number().min(0).max(59),
+  milliseconds: z.coerce.number().min(0).max(99),
   date: z.date({ required_error: 'A data da competição é obrigatória.' }),
   distance: z.coerce.number().positive('A distância deve ser um número positivo.'),
   stroke: z.string().min(1, 'O estilo é obrigatório.'),
+}).refine(data => data.minutes > 0 || data.seconds > 0 || data.milliseconds > 0, {
+    message: 'O tempo não pode ser zero.',
+    path: ['seconds'],
 });
 
 type CompetitionFormData = z.infer<typeof competitionSchema>;
@@ -82,7 +87,9 @@ export function AddCompetitionForm({ isOpen, onOpenChange }: AddCompetitionFormP
     resolver: zodResolver(competitionSchema),
     defaultValues: {
         eventName: '',
-        time: undefined,
+        minutes: 0,
+        seconds: 0,
+        milliseconds: 0,
         date: undefined,
         distance: undefined,
         stroke: '',
@@ -99,6 +106,8 @@ export function AddCompetitionForm({ isOpen, onOpenChange }: AddCompetitionFormP
   const onSubmit = (data: CompetitionFormData) => {
     if (!user || !firestore) return;
 
+    const totalSeconds = (data.minutes || 0) * 60 + data.seconds + data.milliseconds / 100;
+
     const competitionTimesCollection = collection(
       firestore,
       'users',
@@ -111,7 +120,7 @@ export function AddCompetitionForm({ isOpen, onOpenChange }: AddCompetitionFormP
     const submissionData = {
         eventId: eventId,
         eventName: data.eventName,
-        time: data.time,
+        time: totalSeconds,
         date: data.date.toISOString(),
         distance: data.distance,
         stroke: data.stroke,
@@ -168,25 +177,52 @@ export function AddCompetitionForm({ isOpen, onOpenChange }: AddCompetitionFormP
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="time">Tempo (em segundos)</Label>
-              <Controller
-                name="time"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    id="time"
-                    type="number"
-                    step="0.01"
-                    placeholder="Ex: 58.43"
-                    {...field}
-                    value={field.value ?? ''}
-                  />
-                )}
-              />
-              {errors.time && (
-                <p className="text-sm text-destructive">{errors.time.message}</p>
-              )}
+                <Label>Tempo</Label>
+                <div className="flex items-center gap-2">
+                    <Controller
+                        name="minutes"
+                        control={control}
+                        render={({ field }) => (
+                        <Input
+                            type="number"
+                            placeholder="Min"
+                            {...field}
+                            value={field.value ?? ''}
+                        />
+                        )}
+                    />
+                    <span>:</span>
+                    <Controller
+                        name="seconds"
+                        control={control}
+                        render={({ field }) => (
+                        <Input
+                            type="number"
+                            placeholder="Seg"
+                            {...field}
+                            value={field.value ?? ''}
+                        />
+                        )}
+                    />
+                    <span>.</span>
+                     <Controller
+                        name="milliseconds"
+                        control={control}
+                        render={({ field }) => (
+                        <Input
+                            type="number"
+                            placeholder="Ms"
+                            {...field}
+                            value={field.value ?? ''}
+                        />
+                        )}
+                    />
+                </div>
+                 {errors.minutes && <p className="text-sm text-destructive">{errors.minutes.message}</p>}
+                 {errors.seconds && <p className="text-sm text-destructive">{errors.seconds.message}</p>}
+                 {errors.milliseconds && <p className="text-sm text-destructive">{errors.milliseconds.message}</p>}
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="date">Data da Competição</Label>
               <Controller
