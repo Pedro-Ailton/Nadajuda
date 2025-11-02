@@ -22,9 +22,7 @@ const googleAILLMService: AIService = {
 
 export const ai = genkit({
   plugins: [
-    googleAI({
-      apiVersion: ['v1beta'],
-    }),
+    googleAI(),
   ],
   logLevel: 'debug',
   enableTracing: true,
