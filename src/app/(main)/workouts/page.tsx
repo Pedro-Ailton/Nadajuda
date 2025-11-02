@@ -36,7 +36,12 @@ const WorkoutRow = ({ workout, item, itemIndex, onDelete }: { workout: Workout, 
     const handleItemChange = (field: keyof WorkoutItem, value: any) => {
         if (!workout.workoutItems) return;
         const updatedItems = [...workout.workoutItems];
-        updatedItems[itemIndex] = { ...updatedItems[itemIndex], [field]: value };
+        let processedValue = value;
+        if (field === 'repeticoes') {
+            const num = parseInt(value, 10);
+            processedValue = isNaN(num) ? 0 : num;
+        }
+        updatedItems[itemIndex] = { ...updatedItems[itemIndex], [field]: processedValue };
         debouncedUpdate(updatedItems);
     };
 
@@ -92,7 +97,7 @@ const WorkoutRow = ({ workout, item, itemIndex, onDelete }: { workout: Workout, 
     return (
         <TableRow>
             <TableCell className="p-1 align-top"><Input defaultValue={item.fase} onChange={(e) => handleItemChange('fase', e.target.value)} className="w-32" /></TableCell>
-            <TableCell className="p-1 align-top"><Input type="number" defaultValue={item.repeticoes} onChange={(e) => handleItemChange('repeticoes', parseInt(e.target.value))} className="w-24" /></TableCell>
+            <TableCell className="p-1 align-top"><Input type="number" defaultValue={item.repeticoes || ''} onChange={(e) => handleItemChange('repeticoes', e.target.value)} className="w-24" /></TableCell>
             <TableCell className="p-1 align-top min-w-[350px]">
                 <Textarea 
                     ref={descTextareaRef}
