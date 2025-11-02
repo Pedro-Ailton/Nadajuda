@@ -178,45 +178,31 @@ export function AddCompetitionForm({ isOpen, onOpenChange }: AddCompetitionFormP
             
             <div className="space-y-2">
                 <Label>Tempo</Label>
-                <div className="flex items-center gap-2">
-                    <Controller
-                        name="minutes"
-                        control={control}
-                        render={({ field }) => (
-                        <Input
-                            type="number"
-                            placeholder="Min"
-                            {...field}
-                            value={field.value ?? ''}
+                <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-1">
+                        <Controller
+                            name="minutes"
+                            control={control}
+                            render={({ field }) => ( <Input type="number" placeholder="0" {...field} value={field.value ?? ''} /> )}
                         />
-                        )}
-                    />
-                    <span>:</span>
-                    <Controller
-                        name="seconds"
-                        control={control}
-                        render={({ field }) => (
-                        <Input
-                            type="number"
-                            placeholder="Seg"
-                            {...field}
-                            value={field.value ?? ''}
+                        <span className="text-xs text-muted-foreground">min</span>
+                    </div>
+                    <div className="space-y-1">
+                        <Controller
+                            name="seconds"
+                            control={control}
+                            render={({ field }) => ( <Input type="number" placeholder="00" {...field} value={field.value ?? ''} /> )}
                         />
-                        )}
-                    />
-                    <span>.</span>
-                     <Controller
-                        name="milliseconds"
-                        control={control}
-                        render={({ field }) => (
-                        <Input
-                            type="number"
-                            placeholder="Ms"
-                            {...field}
-                            value={field.value ?? ''}
+                         <span className="text-xs text-muted-foreground">s</span>
+                    </div>
+                     <div className="space-y-1">
+                        <Controller
+                            name="milliseconds"
+                            control={control}
+                            render={({ field }) => ( <Input type="number" placeholder="00" {...field} value={field.value ?? ''} /> )}
                         />
-                        )}
-                    />
+                         <span className="text-xs text-muted-foreground">ms</span>
+                    </div>
                 </div>
                  {errors.minutes && <p className="text-sm text-destructive">{errors.minutes.message}</p>}
                  {errors.seconds && <p className="text-sm text-destructive">{errors.seconds.message}</p>}
