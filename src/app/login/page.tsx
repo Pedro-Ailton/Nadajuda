@@ -46,9 +46,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-primary p-4">
        <div className="absolute top-8 left-8">
-         <Logo />
+         <Logo foregroundClass='text-primary-foreground' />
       </div>
       <Tabs defaultValue="login" className="w-full max-w-md">
         <TabsList className="grid w-full grid-cols-2">
@@ -56,7 +56,7 @@ export default function LoginPage() {
           <TabsTrigger value="signup">Criar Conta</TabsTrigger>
         </TabsList>
         <TabsContent value="login">
-          <Card>
+          <Card className="rounded-xl">
             <CardHeader>
               <CardTitle>Bem-vindo de Volta</CardTitle>
               <CardDescription>
@@ -69,7 +69,7 @@ export default function LoginPage() {
           </Card>
         </TabsContent>
         <TabsContent value="signup">
-          <Card>
+          <Card className="rounded-xl">
             <CardHeader>
               <CardTitle>Crie uma Conta</CardTitle>
               <CardDescription>
