@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { getAuth, deleteUser } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 
 export default function ProfilePage() {
@@ -51,6 +52,7 @@ export default function ProfilePage() {
   const [email, setEmail] = useState('');
   const [date, setDate] = useState<Date | undefined>();
   const [notes, setNotes] = useState('');
+  const [gender, setGender] = useState<'female' | 'male' | 'other' | undefined>();
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
@@ -59,6 +61,7 @@ export default function ProfilePage() {
       setEmail(userProfile.email);
       setDate(userProfile.dateOfBirth ? new Date(userProfile.dateOfBirth) : undefined);
       setNotes(userProfile.personalNotes || '');
+      setGender(userProfile.gender);
     } else if (user) {
       setName(user.displayName || '');
       setEmail(user.email || '');
@@ -72,6 +75,7 @@ export default function ProfilePage() {
       email,
       dateOfBirth: date?.toISOString(),
       personalNotes: notes,
+      gender,
     };
     setDocumentNonBlocking(userDocRef, updatedProfile, { merge: true });
     toast({
@@ -144,6 +148,10 @@ export default function ProfilePage() {
                         <Skeleton className="h-4 w-24" />
                         <Skeleton className="h-10 w-full" />
                     </div>
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
                      <div className="space-y-2 md:col-span-2">
                         <Skeleton className="h-4 w-24" />
                         <Skeleton className="h-32 w-full" />
@@ -204,6 +212,27 @@ export default function ProfilePage() {
                     />
                     </PopoverContent>
                 </Popover>
+            </div>
+            <div className="space-y-2">
+                <Label>Gênero</Label>
+                <RadioGroup
+                    onValueChange={(value: 'female' | 'male' | 'other') => setGender(value)}
+                    className="flex items-center gap-6"
+                    value={gender}
+                >
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="female" id="female" />
+                        <Label htmlFor="female">Feminino</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="male" id="male" />
+                        <Label htmlFor="male">Masculino</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="other" id="other" />
+                        <Label htmlFor="other">Outro</Label>
+                    </div>
+                </RadioGroup>
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="notes">Notas Pessoais</Label>

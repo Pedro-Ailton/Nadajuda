@@ -23,6 +23,7 @@ export const UserProfileSchema = z.object({
   dateOfBirth: z.string().optional().describe("User's date of birth (ISO 8601 format)."),
   email: z.string().email().describe("User's email address."),
   personalNotes: z.string().optional().describe("Personal notes or information provided by the user."),
+  gender: z.enum(['female', 'male', 'other']).optional().describe("User's gender."),
 });
 
 export const CompetitionTimeSchema = z.object({

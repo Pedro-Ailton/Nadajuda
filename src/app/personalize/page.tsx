@@ -17,6 +17,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import type { UserProfile } from '@/lib/types';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 export default function PersonalizePage() {
   const { user, isUserLoading } = useUser();
@@ -26,6 +27,7 @@ export default function PersonalizePage() {
 
   const [name, setName] = useState('');
   const [date, setDate] = useState<Date | undefined>();
+  const [gender, setGender] = useState<'female' | 'male' | 'other' | undefined>();
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -48,6 +50,7 @@ export default function PersonalizePage() {
       name,
       email: user.email || '',
       dateOfBirth: date?.toISOString(),
+      gender: gender,
       personalNotes: notes,
     };
 
@@ -113,6 +116,27 @@ export default function PersonalizePage() {
                     />
                     </PopoverContent>
                 </Popover>
+            </div>
+            <div className="space-y-2">
+                <Label>Gênero</Label>
+                <RadioGroup
+                    onValueChange={(value: 'female' | 'male' | 'other') => setGender(value)}
+                    className="flex items-center gap-6"
+                    value={gender}
+                >
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="female" id="female" />
+                        <Label htmlFor="female">Feminino</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="male" id="male" />
+                        <Label htmlFor="male">Masculino</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="other" id="other" />
+                        <Label htmlFor="other">Outro</Label>
+                    </div>
+                </RadioGroup>
             </div>
             <div className="space-y-2">
               <Label htmlFor="notes">Notas Pessoais</Label>

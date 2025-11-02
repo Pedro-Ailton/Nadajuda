@@ -27,6 +27,15 @@
         "personalNotes": {
           "type": "string",
           "description": "Personal notes or information provided by the user."
+        },
+        "gender": {
+          "type": "string",
+          "description": "User's gender.",
+          "enum": [
+            "female",
+            "male",
+            "other"
+          ]
         }
       },
       "required": [
