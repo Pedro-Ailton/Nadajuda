@@ -19,9 +19,6 @@ const prompt = ai.definePrompt({
   model: 'googleai/gemini-pro',
   input: { schema: GenerateWorkoutInputSchema },
   output: { schema: GenerateWorkoutOutputSchema },
-  config: {
-    responseFormat: 'json',
-  },
   prompt: `You are a world-class swimming coach AI. Your task is to generate a personalized swimming workout plan based on the user's details.
 
 User's Age: {{userAge}}
