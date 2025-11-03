@@ -15,19 +15,25 @@ type PerformanceChartProps = {
   data: CompetitionTime[];
 };
 
+// A predefined palette of visually distinct HSL colors.
+const DISTINCT_COLORS: string[] = [
+    'hsl(210, 90%, 45%)', // Blue
+    'hsl(160, 90%, 35%)', // Green-Cyan
+    'hsl(350, 90%, 55%)', // Red
+    'hsl(45, 100%, 45%)', // Yellow-Orange
+    'hsl(280, 80%, 55%)', // Purple
+    'hsl(20, 100%, 50%)', // Orange
+    'hsl(310, 80%, 50%)', // Magenta
+    'hsl(180, 70%, 40%)', // Teal
+];
+
 /**
- * Generates a consistent, unique color for a given string (e.g., event name).
- * @param str The string to hash into a color.
+ * Gets a distinct color for an event based on its index.
+ * @param index The index of the event name.
  * @returns An HSL color string.
  */
-const generateColorFromString = (str: string): string => {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const hue = hash % 360;
-  // Using a fixed saturation and lightness for good visibility in both light/dark themes
-  return `hsl(${hue}, 90%, 45%)`;
+const getColorForEvent = (index: number): string => {
+  return DISTINCT_COLORS[index % DISTINCT_COLORS.length];
 };
 
 
@@ -121,12 +127,12 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
-          {eventNames.map((eventName) => (
+          {eventNames.map((eventName, index) => (
             <Line
               key={eventName}
               type="monotone"
               dataKey={eventName}
-              stroke={generateColorFromString(eventName)}
+              stroke={getColorForEvent(index)}
               strokeWidth={2}
               activeDot={{ r: 8 }}
               connectNulls // This will connect points across missing data points
