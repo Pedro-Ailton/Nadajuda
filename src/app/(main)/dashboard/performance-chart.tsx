@@ -15,13 +15,21 @@ type PerformanceChartProps = {
   data: CompetitionTime[];
 };
 
-const COLORS = [
-  'hsl(var(--chart-1))',
-  'hsl(var(--chart-2))',
-  'hsl(var(--chart-3))',
-  'hsl(var(--chart-4))',
-  'hsl(var(--chart-5))',
-];
+/**
+ * Generates a consistent, unique color for a given string (e.g., event name).
+ * @param str The string to hash into a color.
+ * @returns An HSL color string.
+ */
+const generateColorFromString = (str: string): string => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = hash % 360;
+  // Using a fixed saturation and lightness for good visibility in both light/dark themes
+  return `hsl(${hue}, 90%, 45%)`;
+};
+
 
 export function PerformanceChart({ data }: PerformanceChartProps) {
   const { chartData, eventNames } = useMemo(() => {
@@ -35,7 +43,7 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
     const dataByDate: { [date: string]: { date: string, [key: string]: any } } = {};
 
     sortedData.forEach(item => {
-      const formattedDate = format(new Date(item.date), 'dd/MMM/yy', { locale: ptBR });
+      const formattedDate = format(new Date(item.date), 'dd/MM/yy', { locale: ptBR });
       if (!dataByDate[formattedDate]) {
         dataByDate[formattedDate] = { date: formattedDate };
       }
@@ -113,12 +121,12 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
-          {eventNames.map((eventName, index) => (
+          {eventNames.map((eventName) => (
             <Line
               key={eventName}
               type="monotone"
               dataKey={eventName}
-              stroke={COLORS[index % COLORS.length]}
+              stroke={generateColorFromString(eventName)}
               strokeWidth={2}
               activeDot={{ r: 8 }}
               connectNulls // This will connect points across missing data points
