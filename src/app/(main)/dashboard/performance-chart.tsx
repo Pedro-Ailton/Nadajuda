@@ -35,7 +35,7 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
     const dataByDate: { [date: string]: { date: string, [key: string]: any } } = {};
 
     sortedData.forEach(item => {
-      const formattedDate = format(new Date(item.date), 'dd/MMM', { locale: ptBR });
+      const formattedDate = format(new Date(item.date), 'dd/MMM/yy', { locale: ptBR });
       if (!dataByDate[formattedDate]) {
         dataByDate[formattedDate] = { date: formattedDate };
       }
