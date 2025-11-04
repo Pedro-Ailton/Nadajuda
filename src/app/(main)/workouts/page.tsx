@@ -12,14 +12,13 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, doc, query, orderBy, updateDoc, deleteDoc } from 'firebase/firestore';
 import type { Workout, WorkoutItem } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AddWorkoutForm } from './add-workout-form';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, Edit } from 'lucide-react';
 import { useDebouncedCallback } from 'use-debounce';
 import { Textarea } from '@/components/ui/textarea';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,9 +33,14 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
-import { EditWorkoutForm } from './edit-workout-form';
+import dynamic from 'next/dynamic';
 
-const WorkoutRow = ({ workout, item, itemIndex, onDelete }: { workout: Workout, item: WorkoutItem, itemIndex: number, onDelete: (index: number) => void }) => {
+
+const AddWorkoutForm = dynamic(() => import('./add-workout-form').then(mod => mod.AddWorkoutForm));
+const EditWorkoutForm = dynamic(() => import('./edit-workout-form').then(mod => mod.EditWorkoutForm));
+
+
+const WorkoutRow = React.memo(function WorkoutRow({ workout, item, itemIndex, onDelete }: { workout: Workout, item: WorkoutItem, itemIndex: number, onDelete: (index: number) => void }) {
     const firestore = useFirestore();
     const { user } = useUser();
     const descTextareaRef = React.useRef<HTMLTextAreaElement>(null);
@@ -158,7 +162,7 @@ const WorkoutRow = ({ workout, item, itemIndex, onDelete }: { workout: Workout, 
             </TableCell>
         </TableRow>
     )
-}
+});
 
 const WorkoutTable = ({ workout }: { workout: Workout }) => {
     const { user } = useUser();
@@ -250,6 +254,7 @@ export default function WorkoutsPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const workoutsQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;

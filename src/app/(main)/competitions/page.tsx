@@ -15,8 +15,10 @@ import { collection, query, orderBy } from 'firebase/firestore';
 import type { CompetitionTime } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { AddCompetitionForm } from './add-competition-form';
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
+
+const AddCompetitionForm = dynamic(() => import('./add-competition-form').then(mod => mod.AddCompetitionForm));
 
 function formatTime(totalSeconds: number): string {
   if (isNaN(totalSeconds) || totalSeconds === null) return 'N/A';
@@ -45,7 +47,7 @@ export default function CompetitionsPage() {
 
   return (
     <>
-      <AddCompetitionForm isOpen={isFormOpen} onOpenChange={setIsFormOpen} />
+      {isFormOpen && <AddCompetitionForm isOpen={isFormOpen} onOpenChange={setIsFormOpen} />}
 
       <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
         <div className="flex items-center justify-between">

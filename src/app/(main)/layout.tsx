@@ -3,7 +3,7 @@
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { useEffect, Suspense } from 'react';
+import { useEffect, Suspense, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { getAuth, signOut } from 'firebase/auth';
 import { LogOut } from 'lucide-react';
@@ -11,10 +11,11 @@ import { BottomNavBar } from './bottom-nav-bar';
 import Loading from './loading';
 
 function Header() {
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     const auth = getAuth();
     await signOut(auth);
-  };
+  }, []);
+  
   return (
     <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-md">
       <div className="flex-1" />
@@ -43,11 +44,11 @@ export default function MainLayout({
     }
   }, [user, isUserLoading, router]);
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     const auth = getAuth();
     await signOut(auth);
     router.push('/login');
-  };
+  }, [router]);
 
   if (isUserLoading || !user) {
     return (
