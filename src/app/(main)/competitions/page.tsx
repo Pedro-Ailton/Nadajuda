@@ -48,13 +48,13 @@ export default function CompetitionsPage() {
 
   const { data: competitions, isLoading: isLoadingCompetitions } = useCollection<CompetitionTime>(competitionTimesQuery);
 
-  const handleEditClick = useCallback((competition: CompetitionTime) => {
+  const handleEditClick = (competition: CompetitionTime) => {
     setEditingCompetition(competition);
-  }, []);
+  };
 
-  const handleCloseEditForm = useCallback(() => {
+  const handleCloseEditForm = () => {
     setEditingCompetition(null);
-  }, []);
+  };
 
   return (
     <>
