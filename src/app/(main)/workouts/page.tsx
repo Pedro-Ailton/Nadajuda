@@ -40,7 +40,7 @@ const AddWorkoutForm = dynamic(() => import('./add-workout-form').then(mod => mo
 const EditWorkoutForm = dynamic(() => import('./edit-workout-form').then(mod => mod.EditWorkoutForm));
 
 
-const WorkoutRow = React.memo(function WorkoutRow({ workout, item, itemIndex, onDelete }: { workout: Workout, item: WorkoutItem, itemIndex: number, onDelete: (index: number) => void }) {
+function WorkoutRow({ workout, item, itemIndex, onDelete }: { workout: Workout, item: WorkoutItem, itemIndex: number, onDelete: (index: number) => void }) {
     const firestore = useFirestore();
     const { user } = useUser();
     const descTextareaRef = React.useRef<HTMLTextAreaElement>(null);
@@ -162,7 +162,7 @@ const WorkoutRow = React.memo(function WorkoutRow({ workout, item, itemIndex, on
             </TableCell>
         </TableRow>
     )
-});
+};
 
 const WorkoutTable = ({ workout }: { workout: Workout }) => {
     const { user } = useUser();
