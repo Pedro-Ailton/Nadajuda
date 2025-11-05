@@ -26,7 +26,7 @@ function getLatestBestTime(competitions: CompetitionTime[]) {
     
     const minutes = Math.floor(latestCompetition.time / 60);
     const seconds = (latestCompetition.time % 60).toFixed(2);
-    const formattedTime = minutes > 0 ? `${minutes}:${seconds.padStart(5, '0')}s` : `${seconds}s`;
+    const formattedTime = minutes > 0 ? `${minutes}:${seconds.padStart(5, '0')}` : `${seconds}`;
 
     return { time: formattedTime, eventName: latestCompetition.eventName };
 }
