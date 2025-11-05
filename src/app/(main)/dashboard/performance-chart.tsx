@@ -36,6 +36,21 @@ const getColorForEvent = (index: number): string => {
   return DISTINCT_COLORS[index % DISTINCT_COLORS.length];
 };
 
+/**
+ * Formats total seconds into a mm:ss.SS or ss.SS string.
+ * @param totalSeconds The time in seconds.
+ * @returns A formatted time string.
+ */
+const formatChartTime = (totalSeconds: number): string => {
+    if (isNaN(totalSeconds) || totalSeconds === null) return 'N/A';
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = (totalSeconds % 60).toFixed(2);
+    if (minutes > 0) {
+      return `${minutes}:${seconds.padStart(5, '0')}`;
+    }
+    return `${seconds}`;
+};
+
 
 export function PerformanceChart({ data }: PerformanceChartProps) {
   const { chartData, eventNames } = useMemo(() => {
@@ -86,7 +101,7 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
                         {entry.name}
                     </span>
                     <span className="font-bold" style={{ color: entry.color }}>
-                       {entry.value.toFixed(2)}s
+                       {formatChartTime(entry.value)}
                     </span>
                 </div>
             ))}
