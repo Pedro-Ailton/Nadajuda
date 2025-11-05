@@ -38,7 +38,7 @@ export function Logo({ className, foregroundClass }: LogoProps) {
         <HeartWaveIcon className="text-accent-foreground" />
       </div>
       <span className={cn(foregroundClass)}>
-        NadAjuda
+        Nadajuda
       </span>
     </h1>
   );

@@ -67,7 +67,7 @@ export default function TutorialPage() {
                     <div className="flex justify-center mb-4">
                         <Logo />
                     </div>
-                    <h1 className="text-3xl md:text-4xl font-headline font-bold">Bem-vindo(a) ao NadAjuda!</h1>
+                    <h1 className="text-3xl md:text-4xl font-headline font-bold">Bem-vindo(a) ao Nadajuda!</h1>
                     <p className="text-muted-foreground mt-2 text-lg">Um resumo do que pode fazer na aplicação.</p>
                 </header>
 

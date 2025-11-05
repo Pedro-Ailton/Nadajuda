@@ -6,7 +6,7 @@ import "./globals.css";
 import { Alegreya } from 'next/font/google';
 
 export const metadata: Metadata = {
-  title: "NadAjuda",
+  title: "Nadajuda",
   description: "Seu assistente de natação personalizado com IA.",
 };
 

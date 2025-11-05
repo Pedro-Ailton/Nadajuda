@@ -60,7 +60,7 @@ export default function LoginPage() {
             <CardHeader>
               <CardTitle>Bem-vindo de Volta</CardTitle>
               <CardDescription>
-                Faça login na sua conta NadAjuda para continuar.
+                Faça login na sua conta Nadajuda para continuar.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -73,7 +73,7 @@ export default function LoginPage() {
             <CardHeader>
               <CardTitle>Crie uma Conta</CardTitle>
               <CardDescription>
-                Comece a usar o NadAjuda criando sua conta.
+                Comece a usar o Nadajuda criando sua conta.
               </CardDescription>
             </CardHeader>
             <CardContent>

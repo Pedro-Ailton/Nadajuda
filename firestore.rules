@@ -1,5 +1,5 @@
 /**
- * @fileoverview Firestore Security Rules for NadAjuda application.
+ * @fileoverview Firestore Security Rules for Nadajuda application.
  *
  * Core Philosophy:
  * This ruleset enforces a strict user-ownership model for user profiles, competition times, workouts, and workout items.
