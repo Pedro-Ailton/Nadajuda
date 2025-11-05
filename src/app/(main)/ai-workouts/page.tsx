@@ -132,12 +132,12 @@ export default function AiWorkoutsPage() {
                     <CardContent>
                         <form onSubmit={handleGenerateWorkout} className="space-y-6">
                             <div className="space-y-2">
-                                <Label htmlFor="current-situation">Como se sente hoje / Situação Atual?</Label>
+                                <Label htmlFor="current-situation">Como está seu desempenho atual?</Label>
                                 <Textarea
                                     id="current-situation"
                                     value={currentSituation}
                                     onChange={(e) => setCurrentSituation(e.target.value)}
-                                    placeholder="Ex: Tenho nadado 3x por semana, sinto que a minha técnica de crol está boa, mas canso-me depressa nos 100m."
+                                    placeholder="Ex: Tenho nadado 3x por semana, sinto que a minha técnica de crawl está boa, mas canso-me depressa nos 100m."
                                     className="min-h-[100px]"
                                     disabled={isGenerating}
                                 />
@@ -148,7 +148,7 @@ export default function AiWorkoutsPage() {
                                     id="improvement-goals"
                                     value={improvementGoals}
                                     onChange={(e) => setImprovementGoals(e.target.value)}
-                                    placeholder="Ex: Quero melhorar a minha resistência aeróbica e a finalização da braçada de crol."
+                                    placeholder="Ex: Quero melhorar a minha resistência aeróbica e a finalização da braçada de crawl."
                                     className="min-h-[100px]"
                                     disabled={isGenerating}
                                 />

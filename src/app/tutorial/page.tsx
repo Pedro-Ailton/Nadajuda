@@ -103,10 +103,14 @@ export default function TutorialPage() {
                     </div>
 
                     <div className="flex items-center justify-between">
-                         <Button variant="outline" onClick={handlePrev} disabled={currentSlide === 0}>
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Anterior
-                        </Button>
+                        {currentSlide > 0 ? (
+                            <Button variant="outline" onClick={handlePrev}>
+                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                Anterior
+                            </Button>
+                        ) : (
+                            <div /> // Placeholder to keep the layout consistent
+                        )}
                         
                         {currentSlide === features.length - 1 ? (
                             <Button onClick={handleStart} size="lg">
