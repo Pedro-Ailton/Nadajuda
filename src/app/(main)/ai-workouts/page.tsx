@@ -137,7 +137,7 @@ export default function AiWorkoutsPage() {
                                     id="current-situation"
                                     value={currentSituation}
                                     onChange={(e) => setCurrentSituation(e.target.value)}
-                                    placeholder="Ex: Sinto-me com energia, mas com os ombros um pouco presos."
+                                    placeholder="Ex: Tenho nadado 3x por semana, sinto que a minha técnica de crol está boa, mas canso-me depressa nos 100m."
                                     className="min-h-[100px]"
                                     disabled={isGenerating}
                                 />
@@ -148,7 +148,7 @@ export default function AiWorkoutsPage() {
                                     id="improvement-goals"
                                     value={improvementGoals}
                                     onChange={(e) => setImprovementGoals(e.target.value)}
-                                    placeholder="Ex: Gostaria de focar na técnica de mariposa e ganhar mais resistência."
+                                    placeholder="Ex: Quero melhorar a minha resistência aeróbica e a finalização da braçada de crol."
                                     className="min-h-[100px]"
                                     disabled={isGenerating}
                                 />
