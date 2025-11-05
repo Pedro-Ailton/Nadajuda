@@ -25,7 +25,7 @@ import type { Workout } from '@/lib/types';
 
 const workoutSchema = z.object({
   name: z.string().min(1, 'O nome do treino é obrigatório.'),
-  date: z.string().transform((str, ctx) => {
+  date: z.string().refine(val => val.length === 10, { message: 'Data inválida. Use o formato DD/MM/AAAA.' }).transform((str, ctx) => {
     const parsed = parse(str, 'dd/MM/yyyy', new Date());
     if (isNaN(parsed.getTime())) {
         ctx.addIssue({
@@ -81,6 +81,19 @@ export function EditWorkoutForm({ workout }: EditWorkoutFormProps) {
     setOpen(false);
   };
 
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>, fieldOnChange: (...event: any[]) => void) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 8) {
+      value = value.slice(0, 8);
+    }
+    if (value.length > 4) {
+      value = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4)}`;
+    } else if (value.length > 2) {
+      value = `${value.slice(0, 2)}/${value.slice(2)}`;
+    }
+    fieldOnChange(value);
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -106,7 +119,7 @@ export function EditWorkoutForm({ workout }: EditWorkoutFormProps) {
                 name="date"
                 control={control}
                 render={({ field }) => (
-                  <Input id="date" placeholder="DD/MM/AAAA" {...field} />
+                  <Input id="date" placeholder="DD/MM/AAAA" value={field.value} onChange={(e) => handleDateChange(e, field.onChange)} />
                 )}
             />
             {errors.date && (

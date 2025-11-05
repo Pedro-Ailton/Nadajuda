@@ -103,6 +103,10 @@ export default function ProfilePage() {
 
     let parsedDate: Date | undefined;
     if (date) {
+        if (date.length !== 10) {
+            setDateError("Data inválida. Use o formato DD/MM/AAAA.");
+            return;
+        }
         parsedDate = parse(date, 'dd/MM/yyyy', new Date());
         if (isNaN(parsedDate.getTime())) {
             setDateError("Data inválida. Use o formato DD/MM/AAAA.");
@@ -204,6 +208,19 @@ export default function ProfilePage() {
     )
   }
   
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 8) {
+      value = value.slice(0, 8);
+    }
+    if (value.length > 4) {
+      value = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4)}`;
+    } else if (value.length > 2) {
+      value = `${value.slice(0, 2)}/${value.slice(2)}`;
+    }
+    setDate(value);
+  };
+  
   const parsedCategoryDate = date ? parse(date, 'dd/MM/yyyy', new Date()) : undefined;
   const category = calculateCategory(parsedCategoryDate && !isNaN(parsedCategoryDate.getTime()) ? parsedCategoryDate : undefined);
 
@@ -229,7 +246,7 @@ export default function ProfilePage() {
             </div>
             <div className="space-y-2">
                 <Label htmlFor="dob">Data de Nascimento</Label>
-                <Input id="dob" placeholder="DD/MM/AAAA" value={date || ''} onChange={(e) => setDate(e.target.value)} />
+                <Input id="dob" placeholder="DD/MM/AAAA" value={date || ''} onChange={handleDateChange} />
                 {dateError && <p className="text-sm text-destructive">{dateError}</p>}
             </div>
             <div className="space-y-2">

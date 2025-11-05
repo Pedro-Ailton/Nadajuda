@@ -43,6 +43,11 @@ export default function PersonalizePage() {
 
     let parsedDate: Date | undefined;
     if (date) {
+        if (date.length !== 10) {
+            setDateError("Data inválida. Use o formato DD/MM/AAAA.");
+            setIsLoading(false);
+            return;
+        }
         parsedDate = parse(date, 'dd/MM/yyyy', new Date());
         if (isNaN(parsedDate.getTime())) {
             setDateError("Data inválida. Use o formato DD/MM/AAAA.");
@@ -81,6 +86,19 @@ export default function PersonalizePage() {
      </div>
    );
  }
+ 
+ const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 8) {
+      value = value.slice(0, 8);
+    }
+    if (value.length > 4) {
+      value = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4)}`;
+    } else if (value.length > 2) {
+      value = `${value.slice(0, 2)}/${value.slice(2)}`;
+    }
+    setDate(value);
+  };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
@@ -98,7 +116,7 @@ export default function PersonalizePage() {
             </div>
             <div className="space-y-2">
                 <Label htmlFor="dob">Data de Nascimento</Label>
-                <Input id="dob" placeholder="DD/MM/AAAA" value={date || ''} onChange={(e) => setDate(e.target.value)} />
+                <Input id="dob" placeholder="DD/MM/AAAA" value={date || ''} onChange={handleDateChange} />
                 {dateError && <p className="text-sm text-destructive">{dateError}</p>}
             </div>
             <div className="space-y-2">
