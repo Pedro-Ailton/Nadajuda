@@ -5,11 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { CalendarIcon, Trash2, ShieldCheck } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
+import { ShieldCheck, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useEffect, useState } from 'react';
 import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
@@ -81,16 +79,17 @@ export default function ProfilePage() {
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [date, setDate] = useState<Date | undefined>();
+  const [date, setDate] = useState<string | undefined>();
   const [notes, setNotes] = useState('');
   const [gender, setGender] = useState<'female' | 'male' | 'other' | undefined>();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [dateError, setDateError] = useState<string | null>(null);
 
   useEffect(() => {
     if (userProfile) {
       setName(userProfile.name);
       setEmail(userProfile.email);
-      setDate(userProfile.dateOfBirth ? new Date(userProfile.dateOfBirth) : undefined);
+      setDate(userProfile.dateOfBirth ? format(new Date(userProfile.dateOfBirth), "dd/MM/yyyy") : undefined);
       setNotes(userProfile.personalNotes || '');
       setGender(userProfile.gender);
     } else if (user) {
@@ -101,10 +100,21 @@ export default function ProfilePage() {
 
   const handleSaveChanges = () => {
     if (!userDocRef) return;
+
+    let parsedDate: Date | undefined;
+    if (date) {
+        parsedDate = parse(date, 'dd/MM/yyyy', new Date());
+        if (isNaN(parsedDate.getTime())) {
+            setDateError("Data inválida. Use o formato DD/MM/AAAA.");
+            return;
+        }
+    }
+    setDateError(null);
+
     const updatedProfile: Partial<UserProfile> = {
       name,
       email,
-      dateOfBirth: date?.toISOString(),
+      dateOfBirth: parsedDate?.toISOString(),
       personalNotes: notes,
       gender,
     };
@@ -193,8 +203,9 @@ export default function ProfilePage() {
        </div>
     )
   }
-
-  const category = calculateCategory(date);
+  
+  const parsedCategoryDate = date ? parse(date, 'dd/MM/yyyy', new Date()) : undefined;
+  const category = calculateCategory(parsedCategoryDate && !isNaN(parsedCategoryDate.getTime()) ? parsedCategoryDate : undefined);
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
@@ -218,33 +229,8 @@ export default function ProfilePage() {
             </div>
             <div className="space-y-2">
                 <Label htmlFor="dob">Data de Nascimento</Label>
-                 <Popover>
-                    <PopoverTrigger asChild>
-                    <Button
-                        id="dob"
-                        variant={"outline"}
-                        className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !date && "text-muted-foreground"
-                        )}
-                    >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date ? format(date, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
-                    </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                    <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        initialFocus
-                        captionLayout="dropdown-buttons"
-                        fromYear={1950}
-                        toYear={new Date().getFullYear()}
-                        locale={ptBR}
-                    />
-                    </PopoverContent>
-                </Popover>
+                <Input id="dob" placeholder="DD/MM/AAAA" value={date || ''} onChange={(e) => setDate(e.target.value)} />
+                {dateError && <p className="text-sm text-destructive">{dateError}</p>}
             </div>
             <div className="space-y-2">
                 <Label>Gênero</Label>

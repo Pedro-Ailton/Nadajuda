@@ -9,12 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { parse } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import type { UserProfile } from '@/lib/types';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -26,10 +21,11 @@ export default function PersonalizePage() {
   const { toast } = useToast();
 
   const [name, setName] = useState('');
-  const [date, setDate] = useState<Date | undefined>();
+  const [date, setDate] = useState<string | undefined>();
   const [gender, setGender] = useState<'female' | 'male' | 'other' | undefined>();
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [dateError, setDateError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -45,11 +41,23 @@ export default function PersonalizePage() {
 
     setIsLoading(true);
 
+    let parsedDate: Date | undefined;
+    if (date) {
+        parsedDate = parse(date, 'dd/MM/yyyy', new Date());
+        if (isNaN(parsedDate.getTime())) {
+            setDateError("Data inválida. Use o formato DD/MM/AAAA.");
+            setIsLoading(false);
+            return;
+        }
+    }
+    setDateError(null);
+
+
     const userProfile: UserProfile = {
       id: user.uid,
       name,
       email: user.email || '',
-      dateOfBirth: date?.toISOString(),
+      dateOfBirth: parsedDate?.toISOString(),
       gender: gender,
       personalNotes: notes,
     };
@@ -89,33 +97,9 @@ export default function PersonalizePage() {
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome" />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="dob">Data de Nascimento</Label>                 <Popover>
-                    <PopoverTrigger asChild>
-                    <Button
-                        id="dob"
-                        variant={"outline"}
-                        className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !date && "text-muted-foreground"
-                        )}
-                    >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date ? format(date, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
-                    </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                    <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        initialFocus
-                        captionLayout="dropdown-buttons"
-                        fromYear={1950}
-                        toYear={new Date().getFullYear()}
-                        locale={ptBR}
-                    />
-                    </PopoverContent>
-                </Popover>
+                <Label htmlFor="dob">Data de Nascimento</Label>
+                <Input id="dob" placeholder="DD/MM/AAAA" value={date || ''} onChange={(e) => setDate(e.target.value)} />
+                {dateError && <p className="text-sm text-destructive">{dateError}</p>}
             </div>
             <div className="space-y-2">
                 <Label>Gênero</Label>

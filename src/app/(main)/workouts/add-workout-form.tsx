@@ -19,16 +19,22 @@ import { Label } from '@/components/ui/label';
 import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Plus } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Plus } from 'lucide-react';
+import { parse } from 'date-fns';
 
 const workoutSchema = z.object({
   name: z.string().min(1, 'O nome do treino é obrigatório.'),
-  date: z.date({ required_error: 'A data do treino é obrigatória.' }),
+  date: z.string().transform((str, ctx) => {
+    const parsed = parse(str, 'dd/MM/yyyy', new Date());
+    if (isNaN(parsed.getTime())) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.invalid_date,
+            message: "Data inválida. Use o formato DD/MM/AAAA.",
+        });
+        return z.NEVER;
+    }
+    return parsed;
+  }),
 });
 
 type WorkoutFormData = z.infer<typeof workoutSchema>;
@@ -72,7 +78,7 @@ export function AddWorkoutForm() {
       description: 'Seu treino foi criado. Adicione os detalhes na tabela.',
     });
 
-    reset({ name: '', date: undefined });
+    reset({ name: '', date: '' });
     setOpen(false);
   };
 
@@ -102,30 +108,7 @@ export function AddWorkoutForm() {
                 name="date"
                 control={control}
                 render={({ field }) => (
-                <Popover>
-                    <PopoverTrigger asChild>
-                    <Button
-                        id="date"
-                        variant={"outline"}
-                        className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                        )}
-                    >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? format(field.value, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
-                    </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                    <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                        locale={ptBR}
-                    />
-                    </PopoverContent>
-                </Popover>
+                  <Input id="date" placeholder="DD/MM/AAAA" {...field} />
                 )}
             />
             {errors.date && (

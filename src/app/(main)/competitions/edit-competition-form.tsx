@@ -18,12 +18,6 @@ import { Label } from '@/components/ui/label';
 import { useUser, useFirestore, updateDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import {
   Select,
   SelectContent,
@@ -32,6 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { CompetitionTime } from '@/lib/types';
+import { format, parse } from 'date-fns';
 
 
 const competitionSchema = z.object({
@@ -39,7 +34,17 @@ const competitionSchema = z.object({
   minutes: z.coerce.number().min(0).optional().default(0),
   seconds: z.coerce.number().min(0).max(59),
   milliseconds: z.coerce.number().min(0).max(99),
-  date: z.date({ required_error: 'A data da competição é obrigatória.' }),
+  date: z.string().transform((str, ctx) => {
+    const parsed = parse(str, 'dd/MM/yyyy', new Date());
+    if (isNaN(parsed.getTime())) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.invalid_date,
+            message: "Data inválida. Use o formato DD/MM/AAAA.",
+        });
+        return z.NEVER;
+    }
+    return parsed;
+  }),
   distance: z.coerce.number().positive('A distância deve ser um número positivo.'),
   stroke: z.string().min(1, 'O estilo é obrigatório.'),
 }).refine(data => data.minutes > 0 || data.seconds > 0 || data.milliseconds > 0, {
@@ -103,7 +108,7 @@ export function EditCompetitionForm({ isOpen, onOpenChange, competition }: EditC
         minutes: minutes,
         seconds: seconds,
         milliseconds: milliseconds,
-        date: new Date(competition.date),
+        date: format(new Date(competition.date), 'dd/MM/yyyy'),
         distance: provas.find(p => p.label === competition.eventName)?.distance,
         stroke: provas.find(p => p.label === competition.eventName)?.stroke,
     }
@@ -223,30 +228,7 @@ export function EditCompetitionForm({ isOpen, onOpenChange, competition }: EditC
                   name="date"
                   control={control}
                   render={({ field }) => (
-                  <Popover>
-                      <PopoverTrigger asChild>
-                      <Button
-                          id="date"
-                          variant={"outline"}
-                          className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                          )}
-                      >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ? format(field.value, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
-                      </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                      <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                          locale={ptBR}
-                      />
-                      </PopoverContent>
-                  </Popover>
+                    <Input id="date" placeholder="DD/MM/AAAA" {...field} />
                   )}
               />
               {errors.date && (
