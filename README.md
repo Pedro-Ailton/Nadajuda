@@ -1,5 +1,6 @@
-# Firebase Studio
+feat: adiciona versão inicial do sistema de monitoramento de natação
 
-This is a NextJS starter in Firebase Studio.
-
-To get started, take a look at src/app/page.tsx.
+- Monitoramento do desempenho de atletas
+- Registro e acompanhamento de treinos
+- Treinador de IA para sugestão de treinos
+- Interface e estrutura inicial do projeto
