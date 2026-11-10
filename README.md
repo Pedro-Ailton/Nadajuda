@@ -1,4 +1,4 @@
-feat: adiciona versão inicial do sistema de monitoramento de natação
+feat: sistema de monitoramento de natação
 
 - Monitoramento do desempenho de atletas
 - Registro e acompanhamento de treinos
